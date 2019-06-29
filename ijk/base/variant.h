@@ -8,7 +8,7 @@
 #ifndef _VARIANT_H
 #define _VARIANT_H
 
-#include "details/variant/variant.hpp"
+#include "details/nonstd/variant.hpp"
 
 namespace ijk {
 using namespace nonstd;

@@ -12,15 +12,10 @@
 #ifndef _IJK_OPTIONAL_H
 #define _IJK_OPTIONAL_H
 
-#include "details/optional.h"
+#include "details/nonstd/optional.h"
 
 namespace ijk {
-
-template <typename T>
-using Optional = nonstd::optional<T>;
-
+using namespace nonstd;
 }  // namespace ijk
-
-#define Nullopt nonstd::nullopt;
 
 #endif  // _IJK_OPTIONAL_H

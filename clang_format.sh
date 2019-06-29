@@ -5,8 +5,7 @@ find ijk tests \
     -not \( \
         -path 'ijk/base/details/fmt/*' \
         -o -path 'ijk/base/details/gsl/*' \
-        -o -path 'ijk/base/details/variant/*' \
-        -o -path 'ijk/base/details/optional*' \
+        -o -path 'ijk/base/details/nonstd/*' \
         -o -path 'ijk/base/details/termcolor*' \
         -o -path 'ijk/io/asio/*' \
         -o -path 'samples/shadowsocks-ijk/common/json11.*' \
