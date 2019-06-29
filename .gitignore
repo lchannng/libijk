@@ -1,0 +1,6 @@
+build*/
+_build*
+*.dir
+Win32
+*.user
+3rd/deps
