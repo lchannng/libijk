@@ -11,8 +11,7 @@
 #include "details/variant/variant.hpp"
 
 namespace ijk {
-using namespace mapbox;
-using namespace mapbox::util;
+using namespace nonstd;
 }  // namespace ijk
 
 #endif

@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." OFF)
-option(BUILD_TESTS "Build unittests" OFF)
+option(BUILD_TESTS "Build unittests" ON)
 option(BUILD_SAMPLES "Build samples" OFF)
 option(BUILD_EXTRAS "Build extra libraries" OFF)
 
@@ -122,17 +122,11 @@ else()
 endif()
 
 if (BUILD_TESTS)
-    find_package(GTest REQUIRED)
-    include_directories(${GTEST_INCLUDE_DIRS})
+    include(tests/tests.cmake)
 endif()
 
 if (BUILD_SAMPLES)
     include(samples/samples.cmake)
-endif()
-
-if (BUILD_EXTRAS)
-    include(extras/redis/redis.cmake)
-    # add_subdirectory(framework)
 endif()
 
 auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
@@ -145,6 +139,8 @@ install(TARGETS ijk
 
 message(STATUS "")
 message(STATUS "BUILD_SHARED_LIBS:        " ${BUILD_SHARED_LIBS})
+message(STATUS "BUILD_TESTS:              " ${BUILD_TESTS})
+message(STATUS "BUILD_SAMPLES:            " ${BUILD_SAMPLES})
 message(STATUS "CMAKE_BINARY_DIR:         " ${CMAKE_BINARY_DIR})
 message(STATUS "CMAKE_CURRENT_BINARY_DIR: " ${CMAKE_CURRENT_BINARY_DIR})
 message(STATUS "CMAKE_SOURCE_DIR:         " ${CMAKE_SOURCE_DIR})
