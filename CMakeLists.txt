@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." OFF)
 option(BUILD_TESTS "Build unittests" ON)
 option(BUILD_SAMPLES "Build samples" OFF)
-option(BUILD_EXTRAS "Build extra libraries" OFF)
+option(BUILD_EXTRAS "Build extra libraries" ON)
 
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
     set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
@@ -127,6 +127,10 @@ endif()
 
 if (BUILD_SAMPLES)
     include(samples/samples.cmake)
+endif()
+
+if (BUILD_EXTRAS)
+    include(extras/rpc.cmake)
 endif()
 
 auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
