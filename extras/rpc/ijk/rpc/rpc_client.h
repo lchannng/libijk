@@ -31,6 +31,8 @@ public:
              [](RpcMeta&&, const google::protobuf::Message&) {});
     }
 
+    void install(const RpcManager::Ptr &rpc_manager, RpcServiceID service_id);
+
 protected:
     RpcClient(const RpcManager::Ptr &rpc_manager, UnaryServerInterceptor &&in,
               UnaryServerInterceptor&& out);

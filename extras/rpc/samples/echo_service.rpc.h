@@ -44,20 +44,12 @@ public:
         auto client = std::make_shared<MakeSharedProxy>(
             rpc_manager, std::forward<UnaryServerInterceptor>(in),
             std::forward<UnaryServerInterceptor>(out));
-
+        client->install(rpc_manager, echo_service_id);
         return client;
     }
 
 private:
     using ijk::RpcClient::RpcClient;
-    /*
-private:
-    make_shared_enabler(const RpcManager::Ptr& rpc_manager,
-                      UnaryServerInterceptor&& in, UnaryServerInterceptor&& out, const PrivateConstruct &)
-        : EchoServiceClient(rpc_manager,
-                            std::forward<UnaryServerInterceptor>(in),
-                    std::forward<UnaryServerInterceptor>(out)) {}
-*/
 };
 
 }
