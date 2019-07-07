@@ -10,7 +10,7 @@ file(GLOB_RECURSE IJK_RPC_SRCS
     "${IJK_RPC_ROOT}/ijk/*.cpp"
     )
 
-auto_source_group(rpc ${IJK_RPC_ROOT}/ijk ${IJK_RPC_SRCS})
+auto_source_group(ijk ${IJK_RPC_ROOT}/ijk ${IJK_RPC_SRCS})
 
 add_library(ijk_rpc ${IJK_RPC_SRCS})
 target_link_libraries(ijk_rpc ijk ${Protobuf_LIBRARIES})
