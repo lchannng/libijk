@@ -13,7 +13,7 @@ bool RpcManager::registerHandler(RpcMeta::Type type, RpcServiceID service_id,
                                  ServiceHandler&& handler) {
     std::lock_guard<std::mutex> lock(m_);
     auto& map = handlers_[type];
-    if (map.find(service_id) == map.end()) return false;
+    if (map.find(service_id) != map.end()) return false;
     map[service_id] = std::forward<ServiceHandler>(handler);
     return true;
 }
