@@ -12,11 +12,13 @@
 #include "rpc_common.h"
 #include "rpc_manager.h"
 
+#include "ijk/base/noncopyable.h"
+
 #include <memory>
 
 namespace ijk {
 
-class RpcClient : public std::enable_shared_from_this<RpcClient> {
+class RpcClient : public std::enable_shared_from_this<RpcClient>, Noncopyable {
 public:
     template<typename Response, typename Request, typename Handler>
     void call(const Request& req, RpcServiceID service_id, RpcMethodID method, Handler&& handler) {
@@ -27,8 +29,12 @@ public:
         auto req_info = meta.mutable_request_info();
         req_info->set_intmethod(method);
         req_info->set_sequence_id(seq);
+
+        InterceptorContextType ctx;
         out_(std::move(meta), req,
-             [](RpcMeta&&, const google::protobuf::Message&) {});
+             [](RpcMeta &&, const google::protobuf::Message &,
+                InterceptorContextType &&) {},
+             std::move(ctx));
     }
 
     void install(const RpcManager::Ptr &rpc_manager, RpcServiceID service_id);

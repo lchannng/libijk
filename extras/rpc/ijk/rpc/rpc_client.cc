@@ -15,7 +15,8 @@ RpcClient::RpcClient(const RpcManager::Ptr &rpc_manager,
 void RpcClient::install(const RpcManager::Ptr &rpc_manager,
                         RpcServiceID service_id) {
     auto self = shared_from_this();
-    auto stub = [](RpcMeta &&meta, const string_view &data) {
+    auto stub = [](RpcMeta &&meta, const string_view &data,
+                   InterceptorContextType &&) {
         // TODO
     };
     rpc_manager->registerHandler(RpcMeta::RESPONSE, service_id, std::move(stub));

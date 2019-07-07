@@ -114,16 +114,17 @@ void protobuf_RegisterTypes(const ::std::string&) {
 void AddDescriptorsImpl() {
   InitDefaults();
   static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\022echo_service.proto\022\010ijk.test\"\036\n\013EchoRe"
-      "quest\022\017\n\007message\030\001 \001(\t\"\037\n\014EchoResponse\022\017"
-      "\n\007message\030\001 \001(\t2D\n\013EchoService\0225\n\004Echo\022\025"
-      ".ijk.test.EchoRequest\032\026.ijk.test.EchoRes"
-      "ponseb\006proto3"
+      "\n\022echo_service.proto\022\010ijk.test\032\023ijkrpc_o"
+      "ption.proto\"\036\n\013EchoRequest\022\017\n\007message\030\001 "
+      "\001(\t\"\037\n\014EchoResponse\022\017\n\007message\030\001 \001(\t2D\n\004"
+      "Echo\022<\n\004Echo\022\025.ijk.test.EchoRequest\032\026.ij"
+      "k.test.EchoResponse\"\005\320\363\030\235\022P\000b\006proto3"
   };
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 173);
+      descriptor, 196);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "echo_service.proto", &protobuf_RegisterTypes);
+  ::protobuf_ijkrpc_5foption_2eproto::AddDescriptors();
 }
 
 void AddDescriptors() {

@@ -27,15 +27,16 @@ public:
     RpcManager() = default;
     ~RpcManager() = default;
 
-    using ServiceHandler =
-        std::function<void(RpcMeta &&meta, const string_view& body)>;
+    using ServiceHandler = std::function<void(
+        RpcMeta&& meta, const string_view& body, InterceptorContextType&&)>;
 
-    void registerHandler(RpcMeta::Type type, RpcServiceID service_id,
+    bool registerHandler(RpcMeta::Type type, RpcServiceID service_id,
                          ServiceHandler&& handler);
 
     void removeHandler(RpcMeta::Type type, RpcServiceID service_id);
 
-    void handleRpcMessage(RpcMeta &&meta, const string_view& body);
+    void handleRpcMessage(RpcMeta&& meta, const string_view& body,
+                          InterceptorContextType&&);
 
 private:
     using HandlerMap = std::unordered_map<RpcServiceID, ServiceHandler>;
