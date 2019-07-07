@@ -27,7 +27,7 @@ public:
         meta.set_type(RpcMeta::REQUEST);
         meta.set_service_id(service_id);
         auto req_info = meta.mutable_request_info();
-        req_info->set_intmethod(method);
+        req_info->set_method_id(method);
         req_info->set_sequence_id(seq);
 
         InterceptorContextType ctx;

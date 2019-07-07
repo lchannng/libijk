@@ -189,21 +189,21 @@ inline bool EchoService::Install(const EchoService::Ptr& service)
         
         EchoServiceRequestHandler handler;
 
-        if (!meta.request_info().strmethod().empty())
+        if (!meta.request_info().method_name().empty())
         {
-            auto it = serviceHandlerMapByStr->find(meta.request_info().strmethod());
+            auto it = serviceHandlerMapByStr->find(meta.request_info().method_name());
             if (it == serviceHandlerMapByStr->end())
             {
-                throw std::runtime_error("not found handle, method:" + meta.request_info().strmethod());
+                throw std::runtime_error("not found handle, method:" + meta.request_info().method_name());
             }
             handler = (*it).second;
         }
         else
         {
-            auto it = serviceHandlerMapById->find(meta.request_info().intmethod());
+            auto it = serviceHandlerMapById->find(meta.request_info().method_id());
             if (it == serviceHandlerMapById->end())
             {
-                throw std::runtime_error("not found handle, method:" + meta.request_info().intmethod());
+                throw std::runtime_error("not found handle, method:" + meta.request_info().method_id());
             }
             handler = (*it).second;
         }

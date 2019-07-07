@@ -204,25 +204,25 @@ class RpcMeta_Request : public ::google::protobuf::Message /* @@protoc_insertion
 
   // accessors -------------------------------------------------------
 
-  // string strMethod = 2;
-  void clear_strmethod();
-  static const int kStrMethodFieldNumber = 2;
-  const ::std::string& strmethod() const;
-  void set_strmethod(const ::std::string& value);
+  // string method_name = 2;
+  void clear_method_name();
+  static const int kMethodNameFieldNumber = 2;
+  const ::std::string& method_name() const;
+  void set_method_name(const ::std::string& value);
   #if LANG_CXX11
-  void set_strmethod(::std::string&& value);
+  void set_method_name(::std::string&& value);
   #endif
-  void set_strmethod(const char* value);
-  void set_strmethod(const char* value, size_t size);
-  ::std::string* mutable_strmethod();
-  ::std::string* release_strmethod();
-  void set_allocated_strmethod(::std::string* strmethod);
+  void set_method_name(const char* value);
+  void set_method_name(const char* value, size_t size);
+  ::std::string* mutable_method_name();
+  ::std::string* release_method_name();
+  void set_allocated_method_name(::std::string* method_name);
 
-  // uint64 intMethod = 1;
-  void clear_intmethod();
-  static const int kIntMethodFieldNumber = 1;
-  ::google::protobuf::uint64 intmethod() const;
-  void set_intmethod(::google::protobuf::uint64 value);
+  // uint64 method_id = 1;
+  void clear_method_id();
+  static const int kMethodIdFieldNumber = 1;
+  ::google::protobuf::uint64 method_id() const;
+  void set_method_id(::google::protobuf::uint64 value);
 
   // uint64 sequence_id = 4;
   void clear_sequence_id();
@@ -246,8 +246,8 @@ class RpcMeta_Request : public ::google::protobuf::Message /* @@protoc_insertion
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
-  ::google::protobuf::internal::ArenaStringPtr strmethod_;
-  ::google::protobuf::uint64 intmethod_;
+  ::google::protobuf::internal::ArenaStringPtr method_name_;
+  ::google::protobuf::uint64 method_id_;
   ::google::protobuf::uint64 sequence_id_;
   ::google::protobuf::uint64 timeout_;
   bool expect_response_;
@@ -631,71 +631,71 @@ class RpcMeta : public ::google::protobuf::Message /* @@protoc_insertion_point(c
 #endif  // __GNUC__
 // RpcMeta_Request
 
-// uint64 intMethod = 1;
-inline void RpcMeta_Request::clear_intmethod() {
-  intmethod_ = GOOGLE_ULONGLONG(0);
+// uint64 method_id = 1;
+inline void RpcMeta_Request::clear_method_id() {
+  method_id_ = GOOGLE_ULONGLONG(0);
 }
-inline ::google::protobuf::uint64 RpcMeta_Request::intmethod() const {
-  // @@protoc_insertion_point(field_get:ijk.RpcMeta.Request.intMethod)
-  return intmethod_;
+inline ::google::protobuf::uint64 RpcMeta_Request::method_id() const {
+  // @@protoc_insertion_point(field_get:ijk.RpcMeta.Request.method_id)
+  return method_id_;
 }
-inline void RpcMeta_Request::set_intmethod(::google::protobuf::uint64 value) {
+inline void RpcMeta_Request::set_method_id(::google::protobuf::uint64 value) {
   
-  intmethod_ = value;
-  // @@protoc_insertion_point(field_set:ijk.RpcMeta.Request.intMethod)
+  method_id_ = value;
+  // @@protoc_insertion_point(field_set:ijk.RpcMeta.Request.method_id)
 }
 
-// string strMethod = 2;
-inline void RpcMeta_Request::clear_strmethod() {
-  strmethod_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+// string method_name = 2;
+inline void RpcMeta_Request::clear_method_name() {
+  method_name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline const ::std::string& RpcMeta_Request::strmethod() const {
-  // @@protoc_insertion_point(field_get:ijk.RpcMeta.Request.strMethod)
-  return strmethod_.GetNoArena();
+inline const ::std::string& RpcMeta_Request::method_name() const {
+  // @@protoc_insertion_point(field_get:ijk.RpcMeta.Request.method_name)
+  return method_name_.GetNoArena();
 }
-inline void RpcMeta_Request::set_strmethod(const ::std::string& value) {
+inline void RpcMeta_Request::set_method_name(const ::std::string& value) {
   
-  strmethod_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
-  // @@protoc_insertion_point(field_set:ijk.RpcMeta.Request.strMethod)
+  method_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:ijk.RpcMeta.Request.method_name)
 }
 #if LANG_CXX11
-inline void RpcMeta_Request::set_strmethod(::std::string&& value) {
+inline void RpcMeta_Request::set_method_name(::std::string&& value) {
   
-  strmethod_.SetNoArena(
+  method_name_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
-  // @@protoc_insertion_point(field_set_rvalue:ijk.RpcMeta.Request.strMethod)
+  // @@protoc_insertion_point(field_set_rvalue:ijk.RpcMeta.Request.method_name)
 }
 #endif
-inline void RpcMeta_Request::set_strmethod(const char* value) {
+inline void RpcMeta_Request::set_method_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   
-  strmethod_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
-  // @@protoc_insertion_point(field_set_char:ijk.RpcMeta.Request.strMethod)
+  method_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:ijk.RpcMeta.Request.method_name)
 }
-inline void RpcMeta_Request::set_strmethod(const char* value, size_t size) {
+inline void RpcMeta_Request::set_method_name(const char* value, size_t size) {
   
-  strmethod_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+  method_name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
-  // @@protoc_insertion_point(field_set_pointer:ijk.RpcMeta.Request.strMethod)
+  // @@protoc_insertion_point(field_set_pointer:ijk.RpcMeta.Request.method_name)
 }
-inline ::std::string* RpcMeta_Request::mutable_strmethod() {
+inline ::std::string* RpcMeta_Request::mutable_method_name() {
   
-  // @@protoc_insertion_point(field_mutable:ijk.RpcMeta.Request.strMethod)
-  return strmethod_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  // @@protoc_insertion_point(field_mutable:ijk.RpcMeta.Request.method_name)
+  return method_name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline ::std::string* RpcMeta_Request::release_strmethod() {
-  // @@protoc_insertion_point(field_release:ijk.RpcMeta.Request.strMethod)
+inline ::std::string* RpcMeta_Request::release_method_name() {
+  // @@protoc_insertion_point(field_release:ijk.RpcMeta.Request.method_name)
   
-  return strmethod_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  return method_name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
-inline void RpcMeta_Request::set_allocated_strmethod(::std::string* strmethod) {
-  if (strmethod != NULL) {
+inline void RpcMeta_Request::set_allocated_method_name(::std::string* method_name) {
+  if (method_name != NULL) {
     
   } else {
     
   }
-  strmethod_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), strmethod);
-  // @@protoc_insertion_point(field_set_allocated:ijk.RpcMeta.Request.strMethod)
+  method_name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), method_name);
+  // @@protoc_insertion_point(field_set_allocated:ijk.RpcMeta.Request.method_name)
 }
 
 // bool expect_response = 3;

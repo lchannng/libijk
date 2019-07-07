@@ -22,7 +22,7 @@ struct InterceptorContextType {};
 using RpcServiceID = decltype(std::declval<RpcMeta>().service_id());
 
 using RpcMethodID =
-    decltype(std::declval<RpcMeta>().request_info().intmethod());
+    decltype(std::declval<RpcMeta>().request_info().method_id());
 
 using UnaryHandler = std::function<void(
     RpcMeta&&, const google::protobuf::Message&, InterceptorContextType &&)>;
@@ -48,6 +48,48 @@ inline void parseRequestWrapper(
     inboundInterceptor(std::move(meta), request, std::move(handler),
                        std::forward<InterceptorContextType>(context));
 }
+
+template <class... Args>
+inline UnaryServerInterceptor makeInterceptor(Args... args) {
+    return [=](RpcMeta&& meta, const google::protobuf::Message& message,
+               UnaryHandler&& tail, InterceptorContextType&& context) {
+        class WrapNextInterceptor final {
+        public:
+            WrapNextInterceptor(
+                std::vector<UnaryServerInterceptor> interceptors,
+                UnaryHandler&& tail) noexcept
+                : mCurIndex(0),
+                  mInterceptors(std::move(interceptors)),
+                  mTail(std::forward<UnaryHandler>(tail)) {}
+
+            void operator()(RpcMeta&& meta,
+                            const google::protobuf::Message& message,
+                            InterceptorContextType&& context) {
+                if (mInterceptors.size() == mCurIndex) {
+                    return mTail(std::forward<RpcMeta>(meta), message,
+                                 std::forward<InterceptorContextType>(context));
+                } else {
+                    mCurIndex++;
+                    mInterceptors[mCurIndex - 1](
+                        std::forward<RpcMeta>(meta), message, *this,
+                        std::forward<InterceptorContextType>(context));
+                }
+            }
+
+            size_t curIndex() const { return mCurIndex; }
+
+        private:
+            size_t mCurIndex;
+            const std::vector<UnaryServerInterceptor> mInterceptors;
+            const UnaryHandler mTail;
+        };
+
+        WrapNextInterceptor next({args...}, std::forward<UnaryHandler>(tail));
+        return next(std::move(meta), message,
+                    std::forward<InterceptorContextType>(context));
+    };
+}
+
 
 }  // namespace ijk
 
