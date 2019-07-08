@@ -14,6 +14,6 @@ message EchoResponse {
 
 service Echo {
     rpc Echo(EchoRequest) returns(EchoResponse) {
-        option (gayrpc.core.message_id)= 2333;
+        option (ijk.message_id)= 2333;
     };
 }

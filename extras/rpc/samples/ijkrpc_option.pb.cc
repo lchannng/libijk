@@ -6,90 +6,59 @@
 #include <algorithm>
 
 #include <google/protobuf/stubs/common.h>
-#include <google/protobuf/stubs/port.h>
 #include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/wire_format_lite_inl.h>
+#include <google/protobuf/extension_set.h>
+#include <google/protobuf/wire_format_lite.h>
 #include <google/protobuf/descriptor.h>
 #include <google/protobuf/generated_message_reflection.h>
 #include <google/protobuf/reflection_ops.h>
 #include <google/protobuf/wire_format.h>
-// This is a temporary google only hack
-#ifdef GOOGLE_PROTOBUF_ENFORCE_UNIQUENESS
-#include "third_party/protobuf/version.h"
-#endif
 // @@protoc_insertion_point(includes)
+#include <google/protobuf/port_def.inc>
+namespace ijk {
+}  // namespace ijk
+static constexpr ::PROTOBUF_NAMESPACE_ID::Metadata* file_level_metadata_ijkrpc_5foption_2eproto = nullptr;
+static constexpr ::PROTOBUF_NAMESPACE_ID::EnumDescriptor const** file_level_enum_descriptors_ijkrpc_5foption_2eproto = nullptr;
+static constexpr ::PROTOBUF_NAMESPACE_ID::ServiceDescriptor const** file_level_service_descriptors_ijkrpc_5foption_2eproto = nullptr;
+const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_ijkrpc_5foption_2eproto::offsets[1] = {};
+static constexpr ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema* schemas = nullptr;
+static constexpr ::PROTOBUF_NAMESPACE_ID::Message* const* file_default_instances = nullptr;
 
-namespace gayrpc {
-namespace core {
-}  // namespace core
-}  // namespace gayrpc
-namespace protobuf_ijkrpc_5foption_2eproto {
-void InitDefaults() {
-}
+const char descriptor_table_protodef_ijkrpc_5foption_2eproto[] =
+  "\n\023ijkrpc_option.proto\022\003ijk\032 google/proto"
+  "buf/descriptor.proto:4\n\nmessage_id\022\036.goo"
+  "gle.protobuf.MethodOptions\030\272\216\003 \001(\005:.\n\004fl"
+  "ag\022\036.google.protobuf.MethodOptions\030\273\216\003 \001"
+  "(\005b\006proto3"
+  ;
+static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_ijkrpc_5foption_2eproto_deps[1] = {
+  &::descriptor_table_google_2fprotobuf_2fdescriptor_2eproto,
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_ijkrpc_5foption_2eproto_sccs[1] = {
+};
+static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_ijkrpc_5foption_2eproto_once;
+static bool descriptor_table_ijkrpc_5foption_2eproto_initialized = false;
+const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_ijkrpc_5foption_2eproto = {
+  &descriptor_table_ijkrpc_5foption_2eproto_initialized, descriptor_table_protodef_ijkrpc_5foption_2eproto, "ijkrpc_option.proto", 170,
+  &descriptor_table_ijkrpc_5foption_2eproto_once, descriptor_table_ijkrpc_5foption_2eproto_sccs, descriptor_table_ijkrpc_5foption_2eproto_deps, 0, 1,
+  schemas, file_default_instances, TableStruct_ijkrpc_5foption_2eproto::offsets,
+  file_level_metadata_ijkrpc_5foption_2eproto, 0, file_level_enum_descriptors_ijkrpc_5foption_2eproto, file_level_service_descriptors_ijkrpc_5foption_2eproto,
+};
 
-const ::google::protobuf::uint32 TableStruct::offsets[1] = {};
-static const ::google::protobuf::internal::MigrationSchema* schemas = NULL;
-static const ::google::protobuf::Message* const* file_default_instances = NULL;
-
-void protobuf_AssignDescriptors() {
-  AddDescriptors();
-  AssignDescriptors(
-      "ijkrpc_option.proto", schemas, file_default_instances, TableStruct::offsets,
-      NULL, NULL, NULL);
-}
-
-void protobuf_AssignDescriptorsOnce() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, protobuf_AssignDescriptors);
-}
-
-void protobuf_RegisterTypes(const ::std::string&) GOOGLE_PROTOBUF_ATTRIBUTE_COLD;
-void protobuf_RegisterTypes(const ::std::string&) {
-  protobuf_AssignDescriptorsOnce();
-}
-
-void AddDescriptorsImpl() {
-  InitDefaults();
-  static const char descriptor[] GOOGLE_PROTOBUF_ATTRIBUTE_SECTION_VARIABLE(protodesc_cold) = {
-      "\n\023ijkrpc_option.proto\022\013gayrpc.core\032 goog"
-      "le/protobuf/descriptor.proto:4\n\nmessage_"
-      "id\022\036.google.protobuf.MethodOptions\030\272\216\003 \001"
-      "(\005:.\n\004flag\022\036.google.protobuf.MethodOptio"
-      "ns\030\273\216\003 \001(\005b\006proto3"
-  };
-  ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-      descriptor, 178);
-  ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
-    "ijkrpc_option.proto", &protobuf_RegisterTypes);
-  ::protobuf_google_2fprotobuf_2fdescriptor_2eproto::AddDescriptors();
-}
-
-void AddDescriptors() {
-  static ::google::protobuf::internal::once_flag once;
-  ::google::protobuf::internal::call_once(once, AddDescriptorsImpl);
-}
-// Force AddDescriptors() to be called at dynamic initialization time.
-struct StaticDescriptorInitializer {
-  StaticDescriptorInitializer() {
-    AddDescriptors();
-  }
-} static_descriptor_initializer;
-}  // namespace protobuf_ijkrpc_5foption_2eproto
-namespace gayrpc {
-namespace core {
-::google::protobuf::internal::ExtensionIdentifier< ::google::protobuf::MethodOptions,
-    ::google::protobuf::internal::PrimitiveTypeTraits< ::google::protobuf::int32 >, 5, false >
+// Force running AddDescriptors() at dynamic initialization time.
+static bool dynamic_init_dummy_ijkrpc_5foption_2eproto = (  ::PROTOBUF_NAMESPACE_ID::internal::AddDescriptors(&descriptor_table_ijkrpc_5foption_2eproto), true);
+namespace ijk {
+::PROTOBUF_NAMESPACE_ID::internal::ExtensionIdentifier< ::google::protobuf::MethodOptions,
+    ::PROTOBUF_NAMESPACE_ID::internal::PrimitiveTypeTraits< ::PROTOBUF_NAMESPACE_ID::int32 >, 5, false >
   message_id(kMessageIdFieldNumber, 0);
-::google::protobuf::internal::ExtensionIdentifier< ::google::protobuf::MethodOptions,
-    ::google::protobuf::internal::PrimitiveTypeTraits< ::google::protobuf::int32 >, 5, false >
+::PROTOBUF_NAMESPACE_ID::internal::ExtensionIdentifier< ::google::protobuf::MethodOptions,
+    ::PROTOBUF_NAMESPACE_ID::internal::PrimitiveTypeTraits< ::PROTOBUF_NAMESPACE_ID::int32 >, 5, false >
   flag(kFlagFieldNumber, 0);
 
 // @@protoc_insertion_point(namespace_scope)
-}  // namespace core
-}  // namespace gayrpc
-namespace google {
-namespace protobuf {
-}  // namespace protobuf
-}  // namespace google
+}  // namespace ijk
+PROTOBUF_NAMESPACE_OPEN
+PROTOBUF_NAMESPACE_CLOSE
 
 // @@protoc_insertion_point(global_scope)
+#include <google/protobuf/port_undef.inc>
