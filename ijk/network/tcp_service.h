@@ -8,26 +8,26 @@
 #ifndef TCP_SERVICE_H_PZITAISO
 #define TCP_SERVICE_H_PZITAISO
 
-#include "asio.h"
+#include "io_context_pool.h"
 
+#include "ijk/base/cancel_token.h"
 #include "ijk/base/noncopyable.h"
 #include "ijk/base/string_view.h"
 
 namespace ijk {
 
-using SessionID = int64_t;
-
 class TcpService final : public Noncopyable {
 public:
-    TcpService() = default;
-    ~TcpService() = default;
-    void runForever();
-
-    void shutdown(SessionID session_id);
-    void send(SessionID session_id, const string_view &data);
+    TcpService(io_context_pool &io_pool)
+        : io_pool_(io_pool),
+          io_(io_pool_.get(0)), acceptor_(io_.context()) {}
+    ~TcpService() {};
 
 private:
-    asio::io_context io_ctx_;
+    io_context_pool &io_pool_;
+    io_t &io_;
+    asio::ip::tcp::acceptor acceptor_;
+    SharedCancelToken token_;
 };
 }
 
