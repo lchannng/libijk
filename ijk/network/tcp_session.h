@@ -13,19 +13,31 @@
 #include "ijk/base/string_view.h"
 
 namespace ijk {
-class TcpSession {
+class TcpSession : public std::enable_shared_from_this<TcpSession> {
 public:
-    int64_t id();
+    using Ptr = std::shared_ptr<TcpSession>;
+    using WeakPtr = std::weak_ptr<TcpSession>;
+
+    using ReadHandler = std::function<void (const asio::error_code &, size_t)>;
+
+    TcpSession(io_t &io, asio::ip::tcp::socket &&socket);
+    virtual ~TcpSession() {}
+    uint32_t id();
     std::string localAddress();
     std::string remoteAddress();
 
-    void start();
+    void read(asio::mutable_buffer buf, ReadHandler &&h);
+
+    void readSome(asio::mutable_buffer buf, ReadHandler &&h);
+
     void send(const string_view &data);
 
 protected:
-    auto &socket() { return socket_; }
+    asio::ip::tcp::socket &socket() { return socket_; }
 
 protected:
+    static std::atomic_uint32_t next_session_id_;
+    uint32_t id_;
     io_t &io_;
     asio::ip::tcp::socket socket_{io_.context()};
 };
