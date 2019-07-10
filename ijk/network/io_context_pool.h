@@ -26,6 +26,9 @@ public:
 
     inline asio::io_context &context() { return context_; }
     inline asio::io_context::strand &strand() { return strand_; }
+    inline bool running_in_this_thread() {
+        return strand_.running_in_this_thread();
+    }
 
 private:
     asio::io_context context_;

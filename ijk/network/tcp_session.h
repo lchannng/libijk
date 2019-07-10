@@ -8,38 +8,52 @@
 #ifndef TCP_SESSION_H_2RZWVGWL
 #define TCP_SESSION_H_2RZWVGWL
 
+#include "buffer.h"
 #include "io_context_pool.h"
 
 #include "ijk/base/string_view.h"
 
 namespace ijk {
-class TcpSession : public std::enable_shared_from_this<TcpSession> {
+class TcpSession final : public std::enable_shared_from_this<TcpSession> {
 public:
     using Ptr = std::shared_ptr<TcpSession>;
     using WeakPtr = std::weak_ptr<TcpSession>;
+    using ReadCallback =
+        std::function<size_t(const Ptr &, const string_view &)>;
+    using CloseCallback =
+        std::function<void(const Ptr &, const asio::error_code &)>;
 
-    using ReadHandler = std::function<void (const asio::error_code &, size_t)>;
+    TcpSession(io_t &io);
+    ~TcpSession() = default;
+    inline uint32_t id() { return id_; }
 
-    TcpSession(io_t &io, asio::ip::tcp::socket &&socket);
-    virtual ~TcpSession() {}
-    uint32_t id();
-    std::string localAddress();
-    std::string remoteAddress();
+    inline asio::ip::tcp::socket &socket() { return socket_; } // not thread safe
+    std::string localAddress(); // not thread safe
+    std::string remoteAddress(); // not thread safe
 
-    void read(asio::mutable_buffer buf, ReadHandler &&h);
-
-    void readSome(asio::mutable_buffer buf, ReadHandler &&h);
-
+    void start();
+    void stop();
     void send(const string_view &data);
+    TcpSession &onRead(ReadCallback &&cb);
+    TcpSession &onClosed(CloseCallback &&cb);
 
-protected:
-    asio::ip::tcp::socket &socket() { return socket_; }
+private:
+    void postRead();
+    void postWrite();
+    void onClose(const Ptr &self, const asio::error_code &ec);
 
-protected:
+private:
     static std::atomic_uint32_t next_session_id_;
     uint32_t id_;
     io_t &io_;
-    asio::ip::tcp::socket socket_{io_.context()};
+    asio::ip::tcp::socket socket_;
+    Buffer recv_buf_;
+    std::list<std::string> send_queue_;
+    std::list<std::string> sending_queue_;
+    std::vector<asio::const_buffer> sending_buffers_;
+    ReadCallback on_read_;
+    CloseCallback on_closed_;
+    bool writing_;
 };
 }  // namespace ijk
 
