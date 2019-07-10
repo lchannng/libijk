@@ -24,8 +24,8 @@ public:
         std::function<void(const Ptr &, const asio::error_code &)>;
 
     TcpSession(io_t &io);
-    ~TcpSession() = default;
-    inline uint32_t id() { return id_; }
+    ~TcpSession();
+    inline uint64_t id() { return id_; }
 
     inline asio::ip::tcp::socket &socket() { return socket_; } // not thread safe
     std::string localAddress(); // not thread safe
@@ -43,8 +43,8 @@ private:
     void onClose(const Ptr &self, const asio::error_code &ec);
 
 private:
-    static std::atomic_uint32_t next_session_id_;
-    uint32_t id_;
+    static std::atomic_uint64_t next_session_id_;
+    uint64_t id_;
     io_t &io_;
     asio::ip::tcp::socket socket_;
     Buffer recv_buf_;

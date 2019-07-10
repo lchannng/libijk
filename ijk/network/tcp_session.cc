@@ -7,9 +7,10 @@
 #include "tcp_session.h"
 
 #include "ijk/base/gsl.h"
+#include "ijk/log/log.h"
 
 namespace ijk {
-std::atomic_uint32_t TcpSession::next_session_id_{0};
+std::atomic_uint64_t TcpSession::next_session_id_{0};
 
 TcpSession::TcpSession(io_t &io)
     : id_(++next_session_id_),
@@ -17,6 +18,9 @@ TcpSession::TcpSession(io_t &io)
       socket_(io_.context()),
       writing_(false) {}
 
+TcpSession::~TcpSession() {
+    LOG_DEBUG("session {} closed", id_);
+}
 
 std::string TcpSession::localAddress() {
     if (!socket_.is_open()) return std::string();
@@ -31,11 +35,14 @@ std::string TcpSession::remoteAddress() {
 }
 
 void TcpSession::start() {
-    Expects(io_.running_in_this_thread());
     Expects(on_read_ != nullptr);
+    if (io_.running_in_this_thread()) {
+        postRead();
+    } else {
+        asio::post(io_.strand(),
+                   [this, self = shared_from_this()]() { postRead(); });
+    }
 
-    // TODO: call once
-    postRead();
 }
 
 void TcpSession::stop() {
@@ -67,13 +74,13 @@ void TcpSession::send(const string_view &data) {
 }
 
 TcpSession &TcpSession::onRead(ReadCallback &&cb) {
-    Expects(io_.running_in_this_thread());
+    // Expects(io_.running_in_this_thread());
     on_read_ = std::forward<ReadCallback>(cb);
     return *this;
 }
 
 TcpSession &TcpSession::onClosed(CloseCallback &&cb) {
-    Expects(io_.running_in_this_thread());
+    // Expects(io_.running_in_this_thread());
     on_closed_ = std::forward<CloseCallback>(cb);
     return *this;
 }
@@ -101,7 +108,7 @@ void TcpSession::postRead() {
 void TcpSession::postWrite() {
     sending_buffers_.clear();
     sending_queue_.clear();
-    if (!send_queue_.empty()) return;
+    if (send_queue_.empty()) return;
     if (!socket_.is_open()) return;
     sending_queue_.swap(send_queue_);
     for (const auto &data : sending_queue_) {
@@ -128,4 +135,5 @@ void TcpSession::onClose(const Ptr &self, const asio::error_code &ec) {
         socket_.close(ignored_ec);
     }
 }
+
 }

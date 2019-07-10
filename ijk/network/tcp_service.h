@@ -9,6 +9,7 @@
 #define TCP_SERVICE_H_PZITAISO
 
 #include "io_context_pool.h"
+#include "tcp_session.h"
 
 #include "ijk/base/cancel_token.h"
 #include "ijk/base/noncopyable.h"
@@ -16,12 +17,19 @@
 
 namespace ijk {
 
-class TcpService final : public Noncopyable {
+class TcpAcceptor final : public Noncopyable {
 public:
-    TcpService(io_context_pool &io_pool)
+    using AcceptCallback =
+        std::function<void(TcpSession::Ptr &&)>;
+    TcpAcceptor(io_t &io, io_context_pool &io_pool)
         : io_pool_(io_pool),
-          io_(io_pool_.get(0)), acceptor_(io_.context()) {}
-    ~TcpService() {};
+          io_(io), acceptor_(io_.context()) {}
+    ~TcpAcceptor() {};
+    void start(std::string host, int port, AcceptCallback &&cb);
+    void stop();
+
+private:
+    void startAccept(AcceptCallback &&cb);
 
 private:
     io_context_pool &io_pool_;
