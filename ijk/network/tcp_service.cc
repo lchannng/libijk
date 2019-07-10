@@ -50,15 +50,17 @@ void TcpAcceptor::startAccept(AcceptCallback &&cb) {
     auto sess = std::make_shared<TcpSession>(io_pool_.get());
     acceptor_.async_accept(
         sess->socket(),
-        [this, wt = WeakCancelToken(token_), sess,
-         cb = std::forward<AcceptCallback>(cb)](auto &ec) mutable {
-            if (ec) {
-                LOG_ERROR("accepter error: {}", ec);
-                return;
-            }
-            cb(std::move(sess));
-            startAccept(std::move(cb));
-        });
+        asio::bind_executor(
+            io_.strand(),
+            [this, wt = WeakCancelToken(token_), sess,
+             cb = std::forward<AcceptCallback>(cb)](auto &ec) mutable {
+                if (ec) {
+                    LOG_ERROR("accepter error: {}", ec);
+                    return;
+                }
+                cb(std::move(sess));
+                startAccept(std::move(cb));
+            }));
 }
 
 }

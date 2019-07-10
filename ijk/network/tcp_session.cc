@@ -49,7 +49,7 @@ void TcpSession::stop() {
     if (io_.running_in_this_thread()) {
         onClose(shared_from_this(), asio::error_code());
     } else {
-        asio::post([this, self = shared_from_this()]() {
+        asio::post(io_.strand(), [this, self = shared_from_this()]() {
             onClose(self, asio::error_code());
         });
     }
@@ -90,7 +90,8 @@ void TcpSession::postRead() {
     recv_buf_.reserve(4096);
     socket_.async_read_some(
         asio::buffer(recv_buf_.tail(), recv_buf_.tailRoom()),
-        [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
+        asio::bind_executor(io_.strand(), [this, self = shared_from_this()](
+                                              auto &ec, auto bytes_transfered) {
             if (ec) {
                 onClose(self, ec);
                 return;
@@ -98,11 +99,12 @@ void TcpSession::postRead() {
             recv_buf_.commit(bytes_transfered);
             if (on_read_) {
                 size_t nbytes = on_read_(
-                    self, string_view((char *)recv_buf_.data(), recv_buf_.size()));
+                    self,
+                    string_view((char *)recv_buf_.data(), recv_buf_.size()));
                 recv_buf_.drain(nbytes);
             }
             postRead();
-        });
+        }));
 }
 
 void TcpSession::postWrite() {
@@ -116,13 +118,14 @@ void TcpSession::postWrite() {
     }
     asio::async_write(
         socket_, sending_buffers_,
-        [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
+        asio::bind_executor(io_.strand(), [this, self = shared_from_this()](
+                                              auto &ec, auto bytes_transfered) {
             if (ec) {
                 onClose(self, ec);
                 return;
             }
             postWrite();
-        });
+        }));
 }
 
 void TcpSession::onClose(const Ptr &self, const asio::error_code &ec) {
