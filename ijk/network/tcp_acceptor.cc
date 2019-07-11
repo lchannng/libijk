@@ -17,9 +17,10 @@ void TcpAcceptor::start(std::string host, int port, AcceptCallback &&cb) {
         asio::post(io_.strand(),
                    [this, wt = WeakCancelToken(token_), host = std::move(host),
                     port, cb = std::forward<AcceptCallback>(cb)]() mutable {
+                       if (wt.expired()) return;
                        start(std::move(host), port, std::move(cb));
                    });
-       return;
+        return;
     }
 
     try {
@@ -54,6 +55,7 @@ void TcpAcceptor::startAccept(AcceptCallback &&cb) {
             io_.strand(),
             [this, wt = WeakCancelToken(token_), sess,
              cb = std::forward<AcceptCallback>(cb)](auto &ec) mutable {
+                if (wt.expired()) return;
                 if (ec) {
                     LOG_ERROR("accepter error: {}", ec);
                     return;

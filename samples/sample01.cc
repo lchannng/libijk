@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     ioc.run();
     */
 
-    ijk::io_context_pool pool(1);
+    ijk::io_context_pool pool;
 
     TcpAcceptor acceptor_(pool.get(0), pool);
     acceptor_.start("127.0.0.1", 4000, [](TcpSession::Ptr &&sess) {
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
                 return data.size();
             })
             .onClosed([](auto &s, auto &ec) {
-                LOG_INFO("session {} closed: {}", s->id(), ec);
+                // LOG_INFO("session {} closed: {}", s->id(), ec);
             })
             .start();
     });
