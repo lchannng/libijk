@@ -10,6 +10,12 @@
 
 namespace ijk {
 
+TcpAcceptor::TcpAcceptor(io_t &io, io_context_pool &io_pool)
+    : io_pool_(io_pool),
+      io_(io),
+      acceptor_(io_.context()),
+      token_(makeCancelToken()) {}
+
 void TcpAcceptor::start(std::string host, int port, AcceptCallback &&cb) {
     Expects(port >= 0 && port <= 65535);
 
@@ -43,6 +49,7 @@ void TcpAcceptor::stop() {
         if (wt.expired()) return;
         acceptor_.cancel();
         acceptor_.close();
+        token_ = makeCancelToken();
     });
 }
 

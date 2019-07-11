@@ -21,12 +21,8 @@ class TcpAcceptor final : public Noncopyable {
 public:
     using AcceptCallback =
         std::function<void(TcpSession::Ptr &&)>;
-    TcpAcceptor(io_t &io, io_context_pool &io_pool)
-        : io_pool_(io_pool),
-          io_(io),
-          acceptor_(io_.context()),
-          token_(makeCancelToken()) {}
-    ~TcpAcceptor() {};
+    TcpAcceptor(io_t &io, io_context_pool &io_pool);
+    ~TcpAcceptor() = default;
     void start(std::string host, int port, AcceptCallback &&cb);
     void stop();
 
