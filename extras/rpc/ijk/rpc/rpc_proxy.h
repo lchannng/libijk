@@ -18,7 +18,7 @@
 
 namespace ijk {
 
-class RpcClient : public std::enable_shared_from_this<RpcClient>, Noncopyable {
+class RpcProxy : public std::enable_shared_from_this<RpcProxy>, Noncopyable {
 public:
     template<typename Response, typename Request, typename Handler>
     void call(const Request& req, RpcServiceID service_id, RpcMethodID method, Handler&& handler) {
@@ -40,10 +40,10 @@ public:
     void install(const RpcManager::Ptr &rpc_manager, RpcServiceID service_id);
 
 protected:
-    RpcClient(const RpcManager::Ptr &rpc_manager, UnaryServerInterceptor &&in,
+    RpcProxy(const RpcManager::Ptr &rpc_manager, UnaryServerInterceptor &&in,
               UnaryServerInterceptor&& out);
 
-    virtual ~RpcClient() = default;
+    virtual ~RpcProxy() = default;
     
 protected:
     RpcManager::Ptr rpc_manager_;

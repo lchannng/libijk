@@ -21,7 +21,7 @@
 namespace ijk {
 class io_t final : private Noncopyable {
 public:
-    io_t() : context_(1), strand_(context_) {}
+    io_t() : context_(), strand_(context_) {}
     ~io_t() = default;
 
     inline asio::io_context &context() { return context_; }

@@ -7,7 +7,7 @@
 
 #include "echo_service.pb.h"
 
-#include "ijk/rpc/rpc_client.h"
+#include "ijk/rpc/rpc_proxy.h"
 #include "ijk/rpc/rpc_reply.h"
 #include "ijk/rpc/rpc_service.h"
 
@@ -32,11 +32,11 @@ enum class EchoMsgID:uint64_t
     
 };
 
-class EchoClient : public RpcClient
+class EchoServiceProxy : public RpcProxy
 {
 public:
-    using Ptr = std::shared_ptr<EchoClient>;
-    using WeakPtr = std::weak_ptr<EchoClient>;
+    using Ptr = std::shared_ptr<EchoServiceProxy>;
+    using WeakPtr = std::weak_ptr<EchoServiceProxy>;
 
     using EchoHandler = std::function<void(const ijk::test::EchoResponse&, const RpcError&)>;
     
@@ -56,7 +56,7 @@ public:
     void Echo(const ijk::test::EchoRequest& request,
         const EchoHandler& handler,
         std::chrono::seconds timeout, 
-        RpcClient::TIMEOUT_CALLBACK&& timeoutCallback)
+        RpcProxy::TIMEOUT_CALLBACK&& timeoutCallback)
     {
         call<ijk::test::EchoResponse>(request, 
             static_cast<uint32_t>(echo_service_ServiceID::Echo), 
@@ -73,12 +73,12 @@ public:
         UnaryServerInterceptor &&in,
         UnaryServerInterceptor &&out)
     {
-        class MakeSharedProxy : public EchoClient {
+        class MakeSharedProxy : public EchoServiceProxy {
         public:
             MakeSharedProxy(const RpcManager::Ptr& rpc_manager,
                             UnaryServerInterceptor&& in,
                             UnaryServerInterceptor&& out)
-                : EchoClient(rpc_manager,
+                : EchoServiceProxy(rpc_manager,
                              std::forward<UnaryServerInterceptor>(in),
                              std::forward<UnaryServerInterceptor>(out)) {}
         };
@@ -97,7 +97,7 @@ public:
     }
 
 private:
-    using RpcClient::RpcClient;
+    using RpcProxy::RpcProxy;
 };
 
 class EchoService : public RpcService

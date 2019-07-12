@@ -4,15 +4,15 @@
  * Date  : 2019/07/06 19:27:37
  */
 
-#include "rpc_client.h"
+#include "rpc_proxy.h"
 
 namespace ijk {
 
-RpcClient::RpcClient(const RpcManager::Ptr &rpc_manager,
+RpcProxy::RpcProxy(const RpcManager::Ptr &rpc_manager,
                      UnaryServerInterceptor &&in, UnaryServerInterceptor &&out)
     : rpc_manager_(rpc_manager), in_(in), out_(out), seq_(0) {}
 
-void RpcClient::install(const RpcManager::Ptr &rpc_manager,
+void RpcProxy::install(const RpcManager::Ptr &rpc_manager,
                         RpcServiceID service_id) {
     auto self = shared_from_this();
     auto stub = [](RpcMeta &&meta, const string_view &data,

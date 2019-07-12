@@ -57,11 +57,11 @@ int main(int argc, char *argv[]) {
         rpc_manager->handleRpcMessage(std::forward<RpcMeta>(meta), data,
                                       InterceptorContextType{});
     };
-    auto client = EchoClient::create(rpc_manager, std::move(in), std::move(out));
+    auto proxy = EchoServiceProxy::create(rpc_manager, std::move(in), std::move(out));
 
     EchoRequest req;
     req.set_message("ping");
-    client->Echo(req, [](auto rsp, auto err){
+    proxy->Echo(req, [](auto rsp, auto err) {
     
     });
 
