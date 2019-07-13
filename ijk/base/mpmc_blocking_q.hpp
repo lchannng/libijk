@@ -28,20 +28,15 @@ namespace ijk {
  * Since 'return by reference' is used this queue won't throw */
 template <typename T>
 class mpmc_blocking_q {
-    std::queue<T> queue_;
-    mutable std::mutex m_;
-    std::condition_variable data_cond_;
-
-    mpmc_blocking_q &operator=(const mpmc_blocking_q &) = delete;
-    mpmc_blocking_q(const mpmc_blocking_q &other) = delete;
-
 public:
+    using container_type = std::deque<T>;
+
     mpmc_blocking_q() {}
 
     void push(T item) {
         {
             std::lock_guard<std::mutex> lock(m_);
-            queue_.push(std::move(item));
+            queue_.push_back(std::move(item));
         }
         data_cond_.notify_one();
     }
@@ -53,7 +48,7 @@ public:
             return false;
         }
         popped_item = std::move(queue_.front());
-        queue_.pop();
+        queue_.pop_front();
         return true;
     }
 
@@ -64,7 +59,7 @@ public:
             return false;
         }
         popped_item = std::move(queue_.front());
-        queue_.pop();
+        queue_.pop_front();
         return true;
     }
 
@@ -78,7 +73,7 @@ public:
             //  data_cond_.wait(lock, [](bool result){return !queue_.empty();});
         }
         popped_item = std::move(queue_.front());
-        queue_.pop();
+        queue_.pop_front();
     }
 
     bool empty() const {
@@ -90,6 +85,23 @@ public:
         std::lock_guard<std::mutex> lock(m_);
         return queue_.size();
     }
+
+    bool swap(container_type &other) {
+        std::lock_guard<std::mutex> lock(m_);
+        if (queue_.empty())
+            return false;
+        other.swap(queue_);
+        return true;
+    }
+
+private:
+    container_type queue_;
+    mutable std::mutex m_;
+    std::condition_variable data_cond_;
+
+    mpmc_blocking_q &operator=(const mpmc_blocking_q &) = delete;
+    mpmc_blocking_q(const mpmc_blocking_q &other) = delete;
+
 };
 
 }  // namespace ijk
