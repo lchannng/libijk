@@ -26,13 +26,29 @@ public:
 
     inline asio::io_context &context() { return context_; }
     inline asio::io_context::strand &strand() { return strand_; }
+
     inline bool running_in_this_thread() {
-        return strand_.running_in_this_thread();
+        auto id = std::this_thread::get_id();
+        return id == owner_;
+    }
+
+    inline void run() {
+        std::call_once(once_,
+                       [this]() { owner_ = std::this_thread::get_id(); });
+        context_.run();
+    }
+
+    inline void run_one() {
+        std::call_once(once_,
+                       [this]() { owner_ = std::this_thread::get_id(); });
+        context_.run_one();
     }
 
 private:
     asio::io_context context_;
     asio::io_context::strand strand_;
+    std::thread::id owner_;
+    std::once_flag once_;
 };
 
 /**
@@ -68,7 +84,7 @@ public:
             works_.emplace_back(io.context());
 
             // start work thread
-            threads_.emplace_back([&io]() { io.context().run(); });
+            threads_.emplace_back([&io]() { io.run(); });
         }
 
         if (!async) join();
