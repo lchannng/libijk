@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." OFF)
 option(BUILD_TESTS "Build unittests" ON)
 option(BUILD_SAMPLES "Build samples" ON)
-option(BUILD_EXTRAS "Build extra libraries" ON)
+option(BUILD_EXTRAS "Build extra libraries" OFF)
 
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
     set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
