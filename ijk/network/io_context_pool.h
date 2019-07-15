@@ -21,11 +21,10 @@
 namespace ijk {
 class io_t final : private Noncopyable {
 public:
-    io_t() : context_(), strand_(context_) {}
+    io_t() = default;
     ~io_t() = default;
 
     inline asio::io_context &context() { return context_; }
-    inline asio::io_context::strand &strand() { return strand_; }
 
     inline bool running_in_this_thread() {
         auto id = std::this_thread::get_id();
@@ -44,9 +43,18 @@ public:
         context_.run_one();
     }
 
+    template <typename T>
+    inline void dispatch(T &&func) {
+        asio::dispatch(context_, std::forward<T>(func));
+    }
+
+    template <typename T>
+    inline void post(T &&func) {
+        asio::post(context_, std::forward<T>(func));
+    }
+
 private:
     asio::io_context context_;
-    asio::io_context::strand strand_;
     std::thread::id owner_;
     std::once_flag once_;
 };
@@ -112,7 +120,8 @@ private:
 
     // Give all the io_contexts work to do so that their run() functions will
     // not exit until they are explicitly stopped.
-    std::vector<asio::executor_work_guard<asio::io_context::executor_type>> works_;
+    std::vector<asio::executor_work_guard<asio::io_context::executor_type>>
+        works_;
 
     /// threads to run all of the io_context
     std::vector<std::thread> threads_;

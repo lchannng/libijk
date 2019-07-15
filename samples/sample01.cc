@@ -14,8 +14,9 @@ using namespace ijk;
 int main(int argc, char *argv[]) {
     IJK_INITIALIZE_LOGGING();
     ijk::io_context_pool pool;
-    TcpAcceptor acceptor_(pool.get(0), pool);
-    acceptor_.start("127.0.0.1", 4000, [](TcpSession::Ptr &&sess) {
+    TcpAcceptor acceptor(pool.get(0), pool);
+    asio::ip::tcp::endpoint ep(asio::ip::address_v4::loopback(), 4000);
+    acceptor.start(ep, [](TcpSession::Ptr &&sess) {
         sess->onRead([](auto &s, auto &data) {
                 s->send(data);
                 return data.size();

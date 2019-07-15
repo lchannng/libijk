@@ -19,12 +19,11 @@ TcpAcceptor::TcpAcceptor(io_t &io, io_context_pool &io_pool)
 void TcpAcceptor::start(const asio::ip::tcp::endpoint &ep,
                         AcceptCallback &&cb) {
     if (!io_.running_in_this_thread()) {
-        asio::post(io_.strand(),
-                   [this, wt = WeakCancelToken(token_), ep,
-                    cb = std::forward<AcceptCallback>(cb)]() mutable {
-                       if (wt.expired()) return;
-                       start(ep, std::move(cb));
-                   });
+        io_.post([this, wt = WeakCancelToken(token_), ep,
+                  cb = std::forward<AcceptCallback>(cb)]() mutable {
+            if (wt.expired()) return;
+            start(ep, std::move(cb));
+        });
         return;
     }
 
@@ -42,7 +41,8 @@ void TcpAcceptor::start(const asio::ip::tcp::endpoint &ep,
 }
 
 void TcpAcceptor::stop() {
-    asio::dispatch(io_.strand(), [this, wt = WeakCancelToken(token_)]() {
+    io_.dispatch([this, wt = WeakCancelToken(token_)]() {
+        Expects(io_.running_in_this_thread());
         if (wt.expired()) return;
         acceptor_.cancel();
         acceptor_.close();
@@ -51,22 +51,21 @@ void TcpAcceptor::stop() {
 }
 
 void TcpAcceptor::startAccept(AcceptCallback &&cb) {
+    assert(io_.running_in_this_thread());
     if (!acceptor_.is_open()) return;
     auto sess = std::make_shared<TcpSession>(io_pool_.get());
     acceptor_.async_accept(
         sess->socket(),
-        asio::bind_executor(
-            io_.strand(),
-            [this, wt = WeakCancelToken(token_), sess,
-             cb = std::forward<AcceptCallback>(cb)](auto &ec) mutable {
-                if (wt.expired()) return;
-                if (ec) {
-                    LOG_ERROR("accepter error: {}", ec);
-                    return;
-                }
-                cb(std::move(sess));
-                startAccept(std::move(cb));
-            }));
+        [this, wt = WeakCancelToken(token_), sess,
+         cb = std::forward<AcceptCallback>(cb)](auto &ec) mutable {
+            if (wt.expired()) return;
+            if (ec) {
+                LOG_ERROR("accepter error: {}", ec);
+                return;
+            }
+            cb(std::move(sess));
+            startAccept(std::move(cb));
+        });
 }
 
 }  // namespace ijk

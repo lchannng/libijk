@@ -17,12 +17,11 @@ void TcpConnector::start(const std::string &host, int port,
                          ConnectCallback &&cb) {
     Expects(port >= 0 && port <= 65535);
     if (!io_.running_in_this_thread()) {
-        asio::post(io_.strand(),
-                   [this, wt = WeakCancelToken(token_), host, port,
-                    cb = std::forward<ConnectCallback>(cb)]() mutable {
-                       start(host, port, std::move(cb));
-                   });
-       return;
+        io_.post([this, wt = WeakCancelToken(token_), host, port,
+                  cb = std::forward<ConnectCallback>(cb)]() mutable {
+            start(host, port, std::move(cb));
+        });
+        return;
     }
 
     Expects(io_.running_in_this_thread());
@@ -36,18 +35,17 @@ void TcpConnector::start(const std::string &host, int port,
     }
 
     auto sess = std::make_shared<TcpSession>(io_);
-    asio::async_connect(sess->socket(), res.begin(), res.end(),
-        asio::bind_executor(
-            io_.strand(),
-            [this, wt = WeakCancelToken(token_), sess = sess,
-             cb = std::forward<ConnectCallback>(cb)](auto &ec, auto ep) mutable {
-                if (wt.expired()) return;
-                if (ec) {
-                    cb(ec, nullptr);
-                    return;
-                }
-                cb(asio::error_code(), std::move(sess));
-            }));
+    asio::async_connect(
+        sess->socket(), res.begin(), res.end(),
+        [this, wt = WeakCancelToken(token_), sess = sess,
+         cb = std::forward<ConnectCallback>(cb)](auto &ec, auto ep) mutable {
+            if (wt.expired()) return;
+            if (ec) {
+                cb(ec, nullptr);
+                return;
+            }
+            cb(asio::error_code(), std::move(sess));
+        });
 }
 
 void TcpConnector::stop() {

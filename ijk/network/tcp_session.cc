@@ -9,6 +9,8 @@
 #include "ijk/base/gsl.h"
 #include "ijk/log/log.h"
 
+#include <cassert>
+
 namespace ijk {
 std::atomic_uint64_t TcpSession::next_session_id_{0};
 
@@ -39,8 +41,7 @@ void TcpSession::start() {
     if (io_.running_in_this_thread()) {
         postRead();
     } else {
-        asio::post(io_.strand(),
-                   [this, self = shared_from_this()]() { postRead(); });
+        io_.post([this, self = shared_from_this()]() { postRead(); });
     }
 
 }
@@ -49,7 +50,7 @@ void TcpSession::stop() {
     if (io_.running_in_this_thread()) {
         onClose(shared_from_this(), asio::error_code());
     } else {
-        asio::post(io_.strand(), [this, self = shared_from_this()]() {
+        io_.post([this, self = shared_from_this()]() {
             onClose(self, asio::error_code());
         });
     }
@@ -64,12 +65,11 @@ void TcpSession::send(const string_view &data) {
         return;
     }
 
-    asio::post(io_.strand(), [this, self = shared_from_this(),
-                              d = std::string(data.data(), data.size())]() {
+    io_.post([this, self = shared_from_this(),
+              d = std::string(data.data(), data.size())]() {
         if (!socket_.is_open()) return;
         send_queue_.push_back(std::move(d));
-        if (sending_queue_.empty())
-            postWrite();
+        if (sending_queue_.empty()) postWrite();
     });
 }
 
@@ -86,12 +86,12 @@ TcpSession &TcpSession::onClosed(CloseCallback &&cb) {
 }
 
 void TcpSession::postRead() {
+    assert(io_.running_in_this_thread());
     Expects(socket_.is_open());
     recv_buf_.reserve(4096);
     socket_.async_read_some(
         asio::buffer(recv_buf_.tail(), recv_buf_.tailRoom()),
-        asio::bind_executor(io_.strand(), [this, self = shared_from_this()](
-                                              auto &ec, auto bytes_transfered) {
+        [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
             if (ec) {
                 onClose(self, ec);
                 return;
@@ -104,10 +104,11 @@ void TcpSession::postRead() {
                 recv_buf_.drain(nbytes);
             }
             postRead();
-        }));
+        });
 }
 
 void TcpSession::postWrite() {
+    assert(io_.running_in_this_thread());
     sending_buffers_.clear();
     sending_queue_.clear();
     if (send_queue_.empty()) return;
@@ -119,17 +120,17 @@ void TcpSession::postWrite() {
 
     asio::async_write(
         socket_, sending_buffers_,
-        asio::bind_executor(io_.strand(), [this, self = shared_from_this()](
-                                              auto &ec, auto bytes_transfered) {
+        [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
             if (ec) {
                 onClose(self, ec);
                 return;
             }
             postWrite();
-        }));
+        });
 }
 
 void TcpSession::onClose(const Ptr &self, const asio::error_code &ec) {
+    assert(io_.running_in_this_thread());
     if (on_closed_) on_closed_(self, ec);
     on_closed_ = nullptr;
     on_read_ = nullptr;
