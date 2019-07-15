@@ -16,29 +16,27 @@ TcpAcceptor::TcpAcceptor(io_t &io, io_context_pool &io_pool)
       acceptor_(io_.context()),
       token_(makeCancelToken()) {}
 
-void TcpAcceptor::start(std::string host, int port, AcceptCallback &&cb) {
-    Expects(port >= 0 && port <= 65535);
-
+void TcpAcceptor::start(const asio::ip::tcp::endpoint &ep,
+                        AcceptCallback &&cb) {
     if (!io_.running_in_this_thread()) {
         asio::post(io_.strand(),
-                   [this, wt = WeakCancelToken(token_), host = std::move(host),
-                    port, cb = std::forward<AcceptCallback>(cb)]() mutable {
+                   [this, wt = WeakCancelToken(token_), ep,
+                    cb = std::forward<AcceptCallback>(cb)]() mutable {
                        if (wt.expired()) return;
-                       start(std::move(host), port, std::move(cb));
+                       start(ep, std::move(cb));
                    });
         return;
     }
 
+    Expects(io_.running_in_this_thread());
+
     try {
-        asio::ip::tcp::resolver resolver(io_.context());
-        auto res = resolver.resolve(host, std::to_string(port));
-        auto entry = res.begin();
-        acceptor_.open(entry->endpoint().protocol());
+        acceptor_.open(ep.protocol());
         acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
-        acceptor_.bind(entry->endpoint());
+        acceptor_.bind(ep);
         acceptor_.listen();
         startAccept(std::move(cb));
-    } catch(asio::system_error &e) {
+    } catch (asio::system_error &e) {
         LOG_ERROR("start error: {}", e.what());
     }
 }
@@ -71,4 +69,4 @@ void TcpAcceptor::startAccept(AcceptCallback &&cb) {
             }));
 }
 
-}
+}  // namespace ijk

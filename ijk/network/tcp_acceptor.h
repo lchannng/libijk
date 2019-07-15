@@ -23,7 +23,7 @@ public:
         std::function<void(TcpSession::Ptr &&)>;
     TcpAcceptor(io_t &io, io_context_pool &io_pool);
     ~TcpAcceptor() = default;
-    void start(std::string host, int port, AcceptCallback &&cb);
+    void start(const asio::ip::tcp::endpoint &ep, AcceptCallback &&cb);
     void stop();
 
 private:
