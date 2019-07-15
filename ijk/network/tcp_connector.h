@@ -27,14 +27,8 @@ public:
     void stop();
 
 private:
-    void startConnect(const TcpSession::Ptr &sess, ConnectCallback &&cb,
-                      asio::ip::tcp::resolver::iterator iter);
-
-private:
     io_t &io_;
-    asio::ip::tcp::resolver resolver_;
     SharedCancelToken token_;
-    bool resolving_ {false};
 };
 }
 

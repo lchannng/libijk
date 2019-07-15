@@ -11,7 +11,7 @@
 namespace ijk {
 
 TcpConnector::TcpConnector(io_t &io)
-    : io_(io), resolver_(io_.context()), token_(makeCancelToken()) {}
+    : io_(io), token_(makeCancelToken()) {}
 
 void TcpConnector::start(const std::string &host, int port,
                          ConnectCallback &&cb) {
@@ -26,57 +26,34 @@ void TcpConnector::start(const std::string &host, int port,
     }
 
     Expects(io_.running_in_this_thread());
-    asio::ip::tcp::resolver::query query(host, std::to_string(port));
-    resolver_.async_resolve(
-        query,
-        asio::bind_executor(io_.strand(),
-                            [this, wt = WeakCancelToken(token_),
-                             cb = std::move(cb)](auto &ec, auto iter) mutable {
-                                if (wt.expired()) return;
-                                resolving_ = false;
-                                if (ec) {
-                                    cb(ec, nullptr);
-                                    return;
-                                }
-                                auto sess = std::make_shared<TcpSession>(io_);
-                                startConnect(sess, std::move(cb), iter);
-                            }));
-    resolving_ = true;
-}
 
-void TcpConnector::stop() {
-    asio::dispatch([this, wt = WeakCancelToken(token_)](){
-        if (resolving_) {
-            resolving_ = false;
-            resolver_.cancel();
-        }
-        token_ = makeCancelToken();
-    });
-}
-
-void TcpConnector::startConnect(const TcpSession::Ptr &sess,
-                                ConnectCallback &&cb,
-                                asio::ip::tcp::resolver::iterator iter) {
-    Expects(sess != nullptr);
-    Expects(io_.running_in_this_thread());
-    if (iter == asio::ip::tcp::resolver::iterator()) {
-        cb(asio::error::host_unreachable, nullptr);
+    asio::error_code ec;
+    asio::ip::tcp::resolver resolver(io_.context());
+    auto res = resolver.resolve(host, std::to_string(port), ec);
+    if (ec) {
+        cb(ec, nullptr);
         return;
     }
 
-    sess->socket().async_connect(
-        *iter,
+    auto sess = std::make_shared<TcpSession>(io_);
+    asio::async_connect(sess->socket(), res.begin(), res.end(),
         asio::bind_executor(
             io_.strand(),
             [this, wt = WeakCancelToken(token_), sess = sess,
-             cb = std::forward<ConnectCallback>(cb), iter](auto &ec) mutable {
+             cb = std::forward<ConnectCallback>(cb)](auto &ec, auto ep) mutable {
                 if (wt.expired()) return;
                 if (ec) {
-                    startConnect(sess, std::move(cb), ++iter);
+                    cb(ec, nullptr);
                     return;
                 }
                 cb(asio::error_code(), std::move(sess));
             }));
+}
+
+void TcpConnector::stop() {
+    asio::dispatch([this, wt = WeakCancelToken(token_)](){
+        token_ = makeCancelToken();
+    });
 }
 
 }  // namespace ijk

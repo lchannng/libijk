@@ -31,12 +31,11 @@ void TcpAcceptor::start(std::string host, int port, AcceptCallback &&cb) {
 
     try {
         asio::ip::tcp::resolver resolver(io_.context());
-        asio::ip::tcp::resolver::query query(host, std::to_string(port));
-        auto iter = resolver.resolve(query);
-        asio::ip::tcp::endpoint endpoint = *iter;
-        acceptor_.open(endpoint.protocol());
+        auto res = resolver.resolve(host, std::to_string(port));
+        auto entry = res.begin();
+        acceptor_.open(entry->endpoint().protocol());
         acceptor_.set_option(asio::ip::tcp::acceptor::reuse_address(true));
-        acceptor_.bind(endpoint);
+        acceptor_.bind(entry->endpoint());
         acceptor_.listen();
         startAccept(std::move(cb));
     } catch(asio::system_error &e) {

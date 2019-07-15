@@ -81,7 +81,7 @@ public:
 
         // Create a pool of threads to run all of the io_contexts.
         for (auto &io : io_contexts_) {
-            works_.emplace_back(io.context());
+            works_.emplace_back(io.context().get_executor());
 
             // start work thread
             threads_.emplace_back([&io]() { io.run(); });
@@ -112,7 +112,7 @@ private:
 
     // Give all the io_contexts work to do so that their run() functions will
     // not exit until they are explicitly stopped.
-    std::vector<asio::io_context::work> works_;
+    std::vector<asio::executor_work_guard<asio::io_context::executor_type>> works_;
 
     /// threads to run all of the io_context
     std::vector<std::thread> threads_;

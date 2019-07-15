@@ -68,6 +68,7 @@ elseif(UNIX AND NOT APPLE)
 endif()
 
 add_definitions(-DASIO_STANDALONE)
+add_definitions(-DASIO_NO_DEPRECATED)
 
 set(SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ijk")
 set(ASIO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/asio")

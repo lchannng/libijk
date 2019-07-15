@@ -116,6 +116,7 @@ void TcpSession::postWrite() {
     for (const auto &data : sending_queue_) {
         sending_buffers_.emplace_back(asio::buffer(data.data(), data.size()));
     }
+
     asio::async_write(
         socket_, sending_buffers_,
         asio::bind_executor(io_.strand(), [this, self = shared_from_this()](
