@@ -10,7 +10,7 @@
 
 #ifdef ASIO_STANDALONE
 
-#include <asio/asio.hpp>
+#include <asio.hpp>
 
 
 #else

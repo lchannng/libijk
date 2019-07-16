@@ -21,7 +21,9 @@ class TcpAcceptor final : public Noncopyable {
 public:
     using AcceptCallback =
         std::function<void(TcpSession::Ptr &&)>;
-    TcpAcceptor(io_t &io, io_context_pool &io_pool);
+    using SessionCreator = std::function<TcpSession::Ptr()>;
+
+    TcpAcceptor(io_t &io, SessionCreator &&session_creator);
     ~TcpAcceptor() = default;
     void start(const asio::ip::tcp::endpoint &ep, AcceptCallback &&cb);
     void stop();
@@ -30,8 +32,8 @@ private:
     void startAccept(AcceptCallback &&cb);
 
 private:
-    io_context_pool &io_pool_;
     io_t &io_;
+    SessionCreator session_creator;
     asio::ip::tcp::acceptor acceptor_;
     SharedCancelToken token_;
 };

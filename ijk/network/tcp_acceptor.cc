@@ -10,9 +10,9 @@
 
 namespace ijk {
 
-TcpAcceptor::TcpAcceptor(io_t &io, io_context_pool &io_pool)
-    : io_pool_(io_pool),
-      io_(io),
+TcpAcceptor::TcpAcceptor(io_t &io, SessionCreator &&session_creator)
+    : io_(io),
+      session_creator(std::forward<SessionCreator>(session_creator)),
       acceptor_(io_.context()),
       token_(makeCancelToken()) {}
 
@@ -53,7 +53,7 @@ void TcpAcceptor::stop() {
 void TcpAcceptor::startAccept(AcceptCallback &&cb) {
     assert(io_.running_in_this_thread());
     if (!acceptor_.is_open()) return;
-    auto sess = std::make_shared<TcpSession>(io_pool_.get());
+    auto sess = session_creator();
     acceptor_.async_accept(
         sess->socket(),
         [this, wt = WeakCancelToken(token_), sess,
