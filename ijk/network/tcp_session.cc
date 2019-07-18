@@ -90,7 +90,7 @@ void TcpSession::postRead() {
     Expects(socket_.is_open());
     recv_buf_.reserve(4096);
     socket_.async_read_some(
-        asio::buffer(recv_buf_.tail(), recv_buf_.tailRoom()),
+        asio::buffer(recv_buf_.writable_head(), recv_buf_.writeable_bytes()),
         [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
             if (ec) {
                 onClose(self, ec);
@@ -101,7 +101,7 @@ void TcpSession::postRead() {
                 size_t nbytes = on_read_(
                     self,
                     string_view((char *)recv_buf_.data(), recv_buf_.size()));
-                recv_buf_.drain(nbytes);
+                recv_buf_.consume(nbytes);
             }
             postRead();
         });

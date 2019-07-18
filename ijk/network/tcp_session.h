@@ -8,9 +8,9 @@
 #ifndef TCP_SESSION_H_2RZWVGWL
 #define TCP_SESSION_H_2RZWVGWL
 
-#include "buffer.h"
 #include "io_context_pool.h"
 
+#include "ijk/base/buffer.h"
 #include "ijk/base/string_view.h"
 
 namespace ijk {
@@ -47,7 +47,7 @@ private:
     uint64_t id_;
     io_t &io_;
     asio::ip::tcp::socket socket_;
-    Buffer recv_buf_;
+    buffer recv_buf_;
     std::list<std::string> send_queue_;
     std::list<std::string> sending_queue_;
     std::vector<asio::const_buffer> sending_buffers_;
