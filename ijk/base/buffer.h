@@ -227,9 +227,8 @@ public:
 
     enum seek_origin { Begin, Current, End };
 
-    buffer(size_t capacity = STACK_CAPACITY, uint32_t headreserved = 0)
-        : flag_(0),
-          headreserved_(headreserved),
+    buffer(size_t capacity = STACK_CAPACITY, size_t headreserved = 0)
+        : headreserved_(headreserved),
           capacity_(sizeof(stack_data_)),
           readpos_(headreserved),
           writepos_(headreserved),
@@ -252,7 +251,6 @@ public:
         writepos_ = headreserved;
         headreserved_ = headreserved;
         reserve(capacity);
-        flag_ = 0;
     }
 
     template <typename T>
@@ -331,22 +329,6 @@ public:
 
     void clear() noexcept {
         readpos_ = writepos_ = headreserved_;
-        flag_ = 0;
-    }
-
-    template <typename ValueType>
-    void set_flag(ValueType v) noexcept {
-        flag_ |= static_cast<uint32_t>(v);
-    }
-
-    template <typename ValueType>
-    bool has_flag(ValueType v) const noexcept {
-        return ((flag_ & static_cast<uint32_t>(v)) != 0);
-    }
-
-    template <typename ValueType>
-    void clear_flag(ValueType v) noexcept {
-        flag_ &= ~static_cast<uint32_t>(v);
     }
 
     // mark
@@ -448,9 +430,7 @@ protected:
     }
 
 protected:
-    uint32_t flag_;
-
-    uint32_t headreserved_;
+    size_t headreserved_;
 
     size_t capacity_;
     // read position
