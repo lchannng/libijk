@@ -37,10 +37,10 @@ public:
         context_.run();
     }
 
-    inline void run_one() {
+    inline size_t poll() {
         std::call_once(once_,
                        [this]() { owner_ = std::this_thread::get_id(); });
-        context_.run_one();
+        return context_.poll();
     }
 
     template <typename T>
