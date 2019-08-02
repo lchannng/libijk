@@ -8,8 +8,8 @@
 #ifndef TCP_SERVICE_H_PZITAISO
 #define TCP_SERVICE_H_PZITAISO
 
-#include "io_context_pool.h"
-#include "tcp_session.h"
+#include "io_context_pool.hpp"
+#include "tcp_session.hpp"
 
 #include "ijk/base/cancel_token.h"
 #include "ijk/base/noncopyable.h"

@@ -8,8 +8,8 @@
 #ifndef TCP_CONNECTOR_H_OCJM7UXK
 #define TCP_CONNECTOR_H_OCJM7UXK
 
-#include "io_context_pool.h"
-#include "tcp_session.h"
+#include "io_context_pool.hpp"
+#include "tcp_session.hpp"
 
 #include "ijk/base/noncopyable.h"
 #include "ijk/base/cancel_token.h"
