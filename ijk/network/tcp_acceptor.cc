@@ -7,7 +7,7 @@
 #include "tcp_acceptor.h"
 
 #include "ijk/base/gsl.h"
-#include "ijk/log/log.h"
+#include "ijk/base/logging.hpp"
 
 namespace ijk {
 

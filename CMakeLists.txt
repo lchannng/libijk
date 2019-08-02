@@ -72,10 +72,12 @@ add_definitions(-DASIO_NO_DEPRECATED)
 
 set(SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ijk")
 set(ASIO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/asio")
+set(SPDLOG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/spdlog-1.3.1/include")
 
 include_directories(
     ${PROJECT_SOURCE_DIR}
     ${ASIO_ROOT}
+    ${SPDLOG_ROOT}
     )
 
 file(GLOB_RECURSE IJK_HDRS
@@ -99,6 +101,14 @@ file(GLOB_RECURSE ASIO_HDRS
 
 auto_source_group(asio ${ASIO_ROOT} ${ASIO_HDRS})
 
+file(GLOB_RECURSE SPDLOG_HDRS
+    "${SPDLOG_ROOT}/*.h"
+    "${SPDLOG_ROOT}/*.hpp"
+    "${SPDLOG_ROOT}/*.ipp"
+    )
+
+auto_source_group(spdlog ${SPDLOG_ROOT} ${SPDLOG_HDRS})
+
 if (WIN32)
     set(CMAKE_REQUIRED_LIBRARIES  ws2_32.lib)
     set(LIB_PLATFORM ws2_32 ${CMAKE_THREAD_LIBS_INIT})
@@ -114,11 +124,11 @@ if (BUILD_SHARED_LIBS)
             message( FATAL_ERROR "Need CMake version >=3.4 to build shared windows library!" )
         endif()
     endif()
-    add_library(ijk SHARED ${IJK_HDRS} ${IJK_SRCS} ${ASIO_HDRS})
+    add_library(ijk SHARED ${IJK_HDRS} ${IJK_SRCS} ${ASIO_HDRS} ${SPDLOG_HDRS})
     target_link_libraries(ijk ${LIB_PLATFORM})
     set_property(TARGET ijk PROPERTY POSITION_INDEPENDENT_CODE ON)
 else()
-    add_library(ijk STATIC ${IJK_HDRS} ${IJK_SRCS} ${ASIO_HDRS})
+    add_library(ijk STATIC ${IJK_HDRS} ${IJK_SRCS} ${ASIO_HDRS} ${SPDLOG_HDRS})
     target_link_libraries(ijk ${LIB_PLATFORM})
 endif()
 
@@ -136,6 +146,7 @@ endif()
 
 auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
 auto_install_files("" "${ASIO_ROOT}" ${ASIO_HDRS})
+auto_install_files("" "${SPDLOG_ROOT}" ${SPDLOG_HDRS})
 
 install(TARGETS ijk
     RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
@@ -169,6 +180,6 @@ message(STATUS "CMAKE_INSTALL_LIBDIR:     " ${CMAKE_INSTALL_LIBDIR} )
 message(STATUS "CMAKE_INSTALL_BINDIR:     " ${CMAKE_INSTALL_BINDIR} )
 message(STATUS "")
 
-set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_ROOT} CACHE STRING "ijk include directories")
+set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_ROOT} ${SPDLOG_ROOT} CACHE STRING "ijk include directories")
 set(IJK_LIBRARIES ijk CACHE STRING "ijk libraries")
 

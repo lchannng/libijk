@@ -5,8 +5,8 @@
  * Created Time: 2018/10/28 15:45:08
  */
 
+#include "ijk/base/logging.hpp"
 #include "ijk/network/tcp_connector.h"
-#include "ijk/log/logger.h"
 
 using namespace ijk;
 

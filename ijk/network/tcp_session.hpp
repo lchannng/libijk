@@ -73,7 +73,7 @@ public:
         if (io_.running_in_this_thread()) {
             if (!socket_.is_open()) return;
             send_queue_.push_back(std::string(data.data(), data.size()));
-            if (sending_queue_.empty());
+            if (sending_queue_.empty())
                 postWrite();
             return;
         }

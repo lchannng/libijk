@@ -5,7 +5,7 @@
  * Created Time: 2018/10/28 15:45:08
  */
 
-#include "ijk/log/logger.h"
+#include "ijk/base/logging.hpp"
 #include "ijk/network/asio_headers.hpp"
 #include "ijk/network/tcp_acceptor.h"
 
@@ -17,7 +17,11 @@ int main(int argc, char *argv[]) {
     TcpAcceptor acceptor(pool.get(0), [&pool]() {
         return std::make_shared<TcpSession>(pool.get());
     });
+
     asio::ip::tcp::endpoint ep(asio::ip::address_v4::loopback(), 4000);
+
+    LOG_INFO("server start at {}", ep);
+
     acceptor.start(ep, [](TcpSession::Ptr &&sess) {
         sess->onRead([](auto &s, auto &data) {
                 s->send(data);
