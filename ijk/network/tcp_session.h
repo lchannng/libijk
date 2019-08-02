@@ -11,7 +11,8 @@
 #include "io_context_pool.h"
 
 #include "ijk/base/buffer.h"
-#include "ijk/base/string_view.h"
+
+#include <string_view>
 
 namespace ijk {
 class TcpSession final : public std::enable_shared_from_this<TcpSession> {
@@ -19,7 +20,7 @@ public:
     using Ptr = std::shared_ptr<TcpSession>;
     using WeakPtr = std::weak_ptr<TcpSession>;
     using ReadCallback =
-        std::function<size_t(const Ptr &, const string_view &)>;
+        std::function<size_t(const Ptr &, const std::string_view &)>;
     using CloseCallback =
         std::function<void(const Ptr &, const asio::error_code &)>;
 
@@ -33,7 +34,7 @@ public:
 
     void start();
     void stop();
-    void send(const string_view &data);
+    void send(const std::string_view &data);
     TcpSession &onRead(ReadCallback &&cb);
     TcpSession &onClosed(CloseCallback &&cb);
 

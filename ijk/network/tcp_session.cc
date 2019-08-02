@@ -56,7 +56,7 @@ void TcpSession::stop() {
     }
 }
 
-void TcpSession::send(const string_view &data) {
+void TcpSession::send(const std::string_view &data) {
     if (io_.running_in_this_thread()) {
         if (!socket_.is_open()) return;
         send_queue_.push_back(std::string(data.data(), data.size()));
@@ -100,7 +100,7 @@ void TcpSession::postRead() {
             if (on_read_) {
                 size_t nbytes = on_read_(
                     self,
-                    string_view((char *)recv_buf_.data(), recv_buf_.size()));
+                    std::string_view((char *)recv_buf_.data(), recv_buf_.size()));
                 recv_buf_.consume(nbytes);
             }
             postRead();
