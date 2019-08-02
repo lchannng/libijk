@@ -8,14 +8,12 @@
 #ifndef _kitxx_base_H
 #define _kitxx_base_H
 
-#include "base/any.h"
 #include "base/cancel_token.h"
 #include "base/endian.h"
 #include "base/file_utils.h"
 #include "base/fmt.h"
 #include "base/gsl.h"
 #include "base/id_generator.h"
-#include "base/move_on_copy.h"
 #include "base/mpmc_queue.h"
 #include "base/noncopyable.h"
 #include "base/optparse.h"
@@ -28,7 +26,6 @@
 #include "base/stopwatch.h"
 #include "base/string_utils.h"
 #include "base/thread_pool.h"
-#include "base/variant.h"
 #include "base/weak_callback.h"
 
 #endif
