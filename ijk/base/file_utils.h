@@ -10,7 +10,8 @@
 
 #include <memory>
 #include <string>
-#include "status.h"
+#include <string_view>
+#include <system_error>
 
 namespace ijk {
 
@@ -21,8 +22,8 @@ public:
     using Ptr = std::unique_ptr<SequentialFile>;
     SequentialFile() {}
     virtual ~SequentialFile() {}
-    virtual Status Read(size_t n, char *buf, Slice *result) = 0;
-    virtual Status Skip(size_t n) = 0;
+    virtual void Read(size_t n, char *buf, std::string_view &result, std::error_code &ec) = 0;
+    virtual void Skip(size_t n, std::error_code &ec) = 0;
     SequentialFile(const SequentialFile &) = delete;
     void operator=(const SequentialFile &) = delete;
 };
@@ -32,8 +33,8 @@ public:
     using Ptr = std::unique_ptr<WritableFile>;
     WritableFile() {}
     virtual ~WritableFile() {}
-    virtual Status append(const Slice &data) = 0;
-    virtual Status flush() = 0;
+    virtual void append(const std::string_view &data, std::error_code &ec) = 0;
+    virtual void flush(std::error_code &ec) = 0;
     virtual const std::string &name() = 0;
     WritableFile(const WritableFile &) = delete;
     void operator=(const WritableFile &) = delete;
@@ -41,21 +42,24 @@ public:
 
 class FileUtils {
 public:
-    static Status NewSequentialFile(const std::string &fname,
-                                    SequentialFile::Ptr &res,
-                                    bool binary = false);
-    static Status NewWritableFile(const std::string &fname,
-                                  WritableFile::Ptr &res, bool trunc = false,
-                                  bool binary = false);
-    static Status ReadAllText(const std::string &fname, std::string *out);
-    static Status WriteAllText(const std::string &fname, const Slice &what);
-    static Status ReadAllBytes(const std::string &fname, std::string *out);
-    static Status WriteAllBytes(const std::string &fname, const Slice &what);
+    static SequentialFile::Ptr NewSequentialFile(const std::string &fname,
+                                                 bool binary = false);
+    static WritableFile::Ptr NewWritableFile(const std::string &fname,
+                                             bool trunc = false,
+                                             bool binary = false);
+    static std::string ReadAllText(const std::string &fname,
+                                   std::error_code &ec);
+    static void WriteAllText(const std::string &fname,
+                             const std::string_view &what, std::error_code &ec);
+    static std::string ReadAllBytes(const std::string &fname,
+                                    std::error_code &ec);
+    static void WriteAllBytes(const std::string &fname,
+                              const std::string_view &what,
+                              std::error_code &ec);
     static std::string GetBaseName(const std::string &fname);
     static bool Exists(const std::string &fname);
     static bool Exists(const char *fname);
-    static Status Remove(const std::string &fname);
-    static Status Remove(const char *fname);
+    static void Remove(const std::string_view &fname, std::error_code &ec);
 };  // class FileUtils
 
 }  // namespace ijk

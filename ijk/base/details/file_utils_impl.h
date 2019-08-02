@@ -12,11 +12,35 @@
 #include <algorithm>
 #include <cstdio>
 #include "../file_utils.h"
-#include "../slice.h"
 
 namespace ijk {
 
 namespace details {
+
+enum IOError {
+    ReadError = 1,
+    WriteError,
+    SeekError,
+    FlushError,
+    FileNotExisted,
+    FailedToCreate,
+};
+
+class IOErrorCategory : public std::error_category {
+public:
+    virtual const char *name() const noexcept override {
+        return "IOErrorCategory";
+    }
+
+    virtual std::string message(int val) const override {
+        return std::string("io error:") + std::to_string(val);
+    }
+};
+
+std::error_code makeErrorCode(IOError error) {
+    static IOErrorCategory category;
+    return std::error_code((int)error, category);
+}
 
 class SequentialFileImpl : public SequentialFile {
 private:
@@ -31,27 +55,26 @@ public:
             fclose(fp_);
         }
     }
-
-    Status Read(size_t n, char *buf, Slice *result) override {
+    void Read(size_t n, char *buf, std::string_view &result,
+              std::error_code &ec) override {
         size_t nread = fread(buf, 1, n, fp_);
         if (nread != n) {
             if (feof(fp_)) {
                 // Reach the end of file
             } else {
                 // A partial read with an error
-                return Status::IOError("A partial read with an error");
+                ec = makeErrorCode(ReadError);
+                return;
                 ;
             }
         }
-        *result = Slice(buf, nread);
-        return Status::OK();
+        result = std::string_view(buf, nread);
     }
 
-    Status Skip(size_t n) override {
+    void Skip(size_t n, std::error_code &ec) override {
         if (fseek(fp_, static_cast<long>(n), SEEK_CUR)) {
-            return Status::IOError("fseek error");
+            ec = makeErrorCode(ReadError);
         }
-        return Status::OK();
     }
 };
 
@@ -67,57 +90,58 @@ public:
 
     ~WritableFileImpl() {
         if (fp_) {
-            flush();
+            std::error_code ec;
+            flush(ec);
             fclose(fp_);
         }
     }
 
-    Status append(const Slice &data) override {
-        if (data.empty()) return Status::OK();
+    void append(const std::string_view &data, std::error_code &ec) override {
+        if (data.empty()) return;
 
         size_t res = fwrite(data.data(), 1, data.size(), fp_);
         if (res != data.size()) {
-            return Status::IOError("fwrite error.");
+            ec = makeErrorCode(WriteError);
+            return;
         }
         dirty_ = true;
-        return Status::OK();
     }
 
-    Status flush() override {
+    void flush(std::error_code &ec) override {
         if (dirty_) {
             if (fflush(fp_)) {
-                return Status::IOError("flush error.");
+                ec = makeErrorCode(FlushError);
+                return;
             }
             dirty_ = false;
         }
-        return Status::OK();
     }
 
     const std::string &name() override { return fname_; }
 };
 
-inline Status ReadFile(SequentialFile::Ptr &file, std::string *out) {
-    out->clear();
+inline void ReadFile(SequentialFile::Ptr &file, std::string &out,
+                     std::error_code &ec) {
+    out.clear();
     char buf[8192];
-    Slice fragment;
+    std::string_view fragment;
+    std::error_code ec;
     while (true) {
-        auto res = file->Read(sizeof(buf), buf, &fragment);
-        if (!res.ok()) {
-            return res;
+        file->Read(sizeof(buf), buf, fragment, ec);
+        if (ec) {
+            return;
         }
         if (fragment.empty()) {
             break;
         }
-        out->append(fragment.data(), fragment.size());
+        out.append(fragment.data(), fragment.size());
     }
-    return Status::OK();
 }
 
 }  // namespace details
 
-inline Status FileUtils::NewSequentialFile(const std::string &fname,
-                                           SequentialFile::Ptr &res,
-                                           bool binary /* = false*/) {
+inline SequentialFile::Ptr FileUtils::NewSequentialFile(
+    const std::string &fname, bool binary /* = false*/) {
     using namespace std;
 
     std::string mode = "r";
@@ -125,18 +149,14 @@ inline Status FileUtils::NewSequentialFile(const std::string &fname,
 
     FILE *fp = fopen(fname.c_str(), mode.c_str());
     if (!fp) {
-        // error msg
-        return Status::IOError("Failed to open file");
+        return nullptr;
     }
-    SequentialFile *seq_file = new details::SequentialFileImpl(fp, fname);
-    res.reset(seq_file);
-    return Status::OK();
+    return std::make_unique<details::SequentialFileImpl>(fp, fname);
 }
 
-inline Status FileUtils::NewWritableFile(const std::string &fname,
-                                         WritableFile::Ptr &res,
-                                         bool trunc /* = false*/,
-                                         bool binary /* = false*/) {
+inline WritableFile::Ptr FileUtils::NewWritableFile(const std::string &fname,
+                                                    bool trunc /* = false*/,
+                                                    bool binary /* = false*/) {
     using namespace std;
 
     std::string mode = "a";
@@ -145,46 +165,57 @@ inline Status FileUtils::NewWritableFile(const std::string &fname,
 
     FILE *fp = fopen(fname.c_str(), mode.c_str());
     if (!fp) {
-        // error msg
-        return Status::IOError("Failed to open file");
+        return nullptr;
     }
-    WritableFile *writable_file = new details::WritableFileImpl(fp, fname);
-    res.reset(writable_file);
-    return Status::OK();
+    return std::make_unique<details::WritableFileImpl>(fp, fname);
 }
 
-inline Status FileUtils::ReadAllText(const std::string &fname,
-                                     std::string *out) {
-    SequentialFile::Ptr seq_file;
-    auto status = NewSequentialFile(fname, seq_file, false);
-    if (!status.ok()) return status;
-    return details::ReadFile(seq_file, out);
+inline std::string FileUtils::ReadAllText(const std::string &fname,
+                                          std::error_code &ec) {
+    auto seq_file = NewSequentialFile(fname, false);
+    if (!seq_file) {
+        ec = makeErrorCode(details::FileNotExisted);
+        return std::string();
+    }
+    std::string res;
+    std::error_code ec;
+    details::ReadFile(seq_file, res, ec);
+    return res;
 }
 
-inline Status FileUtils::ReadAllBytes(const std::string &fname,
-                                      std::string *out) {
-    SequentialFile::Ptr seq_file;
-    auto status = NewSequentialFile(fname, seq_file, true);
-    if (!status.ok()) return status;
-    return details::ReadFile(seq_file, out);
+inline std::string FileUtils::ReadAllBytes(const std::string &fname,
+                                           std::error_code &ec) {
+    auto seq_file = NewSequentialFile(fname, true);
+    if (!seq_file) {
+        ec = makeErrorCode(details::FileNotExisted);
+        return std::string();
+    }
+    std::string res;
+    std::error_code ec;
+    details::ReadFile(seq_file, res, ec);
+    return res;
 }
 
-inline Status FileUtils::WriteAllText(const std::string &fname,
-                                      const Slice &what) {
-    WritableFile::Ptr file;
-    auto status = NewWritableFile(fname, file, true, false);
-    if (!status.ok()) return status;
-    file->append(what);
-    return Status::OK();
+inline void FileUtils::WriteAllText(const std::string &fname,
+                                    const std::string_view &what,
+                                    std::error_code &ec) {
+    auto file = NewWritableFile(fname, true, false);
+    if (!file) {
+        ec = makeErrorCode(details::FailedToCreate);
+        return;
+    }
+    file->append(what, ec);
 }
 
-inline Status FileUtils::WriteAllBytes(const std::string &fname,
-                                       const Slice &what) {
-    WritableFile::Ptr file;
-    auto status = NewWritableFile(fname, file, true, true);
-    if (!status.ok()) return status;
-    file->append(what);
-    return Status::OK();
+inline void FileUtils::WriteAllBytes(const std::string &fname,
+                                     const std::string_view &what,
+                                     std::error_code &ec) {
+    auto file = NewWritableFile(fname, true, true);
+    if (!file) {
+        ec = makeErrorCode(details::FailedToCreate);
+        return;
+    }
+    file->append(what, ec);
 }
 
 inline std::string FileUtils::GetBaseName(const std::string &fname) {
@@ -211,16 +242,11 @@ inline bool FileUtils::Exists(const char *fname) {
     return S_ISREG(info.st_mode);
 }
 
-inline Status FileUtils::Remove(const std::string &fname) {
-    return Remove(fname.c_str());
-}
-
-inline Status FileUtils::Remove(const char *fname) {
-    int res = std::remove(fname);
-    if (res == 0) return Status::OK();
-    char buf[64];
-    sprintf(buf, "Failed to remove file, res = %d", res);
-    return Status::IOError(buf);
+inline void FileUtils::Remove(const std::string_view &fname,
+                              std::error_code &ec) {
+    int res = std::remove(fname.data());
+    if (res == 0) return;
+    ec = makeErrorCode(details::FileNotExisted);
 }
 
 }  // namespace ijk

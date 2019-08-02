@@ -13,8 +13,7 @@
 #if defined(_WIN32) || defined(_WIN64)
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include "details/fmt/core.h"
-#include "details/fmt/format.h"
-#include "details/fmt/printf.h"
+
+#include "spdlog/fmt/fmt.h"
 
 #endif
