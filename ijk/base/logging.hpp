@@ -11,6 +11,7 @@
 #include "spdlog/spdlog.h"
 
 #include "spdlog/async.h"
+#include "spdlog/fmt/bundled/chrono.h"
 #include "spdlog/fmt/bundled/ostream.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
