@@ -7,22 +7,18 @@
 
 #include "ijk/base/logging.hpp"
 #include "ijk/network/asio_headers.hpp"
-#include "ijk/network/tcp_acceptor.h"
+#include "ijk/network/tcp_acceptor.hpp"
 
 using namespace ijk;
 
 int main(int argc, char *argv[]) {
     IJK_INITIALIZE_LOGGING();
     ijk::io_context_pool pool;
-    TcpAcceptor acceptor(pool.get(0), [&pool]() {
-        return std::make_shared<TcpSession>(pool.get());
-    });
-
     asio::ip::tcp::endpoint ep(asio::ip::address_v4::loopback(), 4000);
 
     LOG_INFO("server start at {}", ep);
-
-    acceptor.start(ep, [](TcpSession::Ptr &&sess) {
+    TcpAcceptor acceptor(pool.get(0), ep, &pool);
+    acceptor.start([](TcpSession::Ptr &&sess) {
         sess->onRead([](auto &s, auto &data) {
                 s->send(data);
                 return data.size();
@@ -32,6 +28,8 @@ int main(int argc, char *argv[]) {
             })
             .start();
     });
+
+
     pool.run();
 
     return 0;

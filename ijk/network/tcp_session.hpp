@@ -32,6 +32,12 @@ public:
           socket_(io_.context()),
           writing_(false) {}
 
+    TcpSession(io_t &io, asio::ip::tcp::socket &&socket)
+        : id_(++next_session_id_),
+          io_(io),
+          socket_(std::move(socket)),
+          writing_(false) {}
+
     ~TcpSession() {}
     inline uint64_t id() { return id_; }
 
