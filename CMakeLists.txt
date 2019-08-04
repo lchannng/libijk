@@ -4,7 +4,6 @@ cmake_minimum_required (VERSION 2.8)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(BUILD_SHARED_LIBS "Build shared libraries (DLLs)." OFF)
 option(BUILD_TESTS "Build unittests" ON)
 option(BUILD_SAMPLES "Build samples" ON)
 option(BUILD_EXTRAS "Build extra libraries" OFF)
@@ -86,12 +85,7 @@ file(GLOB_RECURSE IJK_HDRS
     "${SRC_ROOT}/*.ipp"
     )
 
-file(GLOB_RECURSE IJK_SRCS
-    "${SRC_ROOT}/*.cc"
-    "${SRC_ROOT}/*.cpp"
-    )
-
-auto_source_group(ijk ${SRC_ROOT} ${IJK_SRCS} ${IJK_HDRS})
+auto_source_group(ijk ${SRC_ROOT} ${IJK_HDRS})
 
 file(GLOB_RECURSE ASIO_HDRS
     "${ASIO_ROOT}/*.h"
@@ -109,28 +103,12 @@ file(GLOB_RECURSE SPDLOG_HDRS
 
 auto_source_group(spdlog ${SPDLOG_ROOT} ${SPDLOG_HDRS})
 
-if (WIN32)
-    set(CMAKE_REQUIRED_LIBRARIES  ws2_32.lib)
-    set(LIB_PLATFORM ws2_32 ${CMAKE_THREAD_LIBS_INIT})
-else()
-    set(LIB_PLATFORM ${CMAKE_THREAD_LIBS_INIT})
-endif()
-
-if (BUILD_SHARED_LIBS)
-    if( WIN32 )
-        if(NOT(${CMAKE_VERSION} VERSION_LESS "3.4"))
-            set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-        else()
-            message( FATAL_ERROR "Need CMake version >=3.4 to build shared windows library!" )
-        endif()
-    endif()
-    add_library(ijk SHARED ${IJK_HDRS} ${IJK_SRCS} ${ASIO_HDRS} ${SPDLOG_HDRS})
-    target_link_libraries(ijk ${LIB_PLATFORM})
-    set_property(TARGET ijk PROPERTY POSITION_INDEPENDENT_CODE ON)
-else()
-    add_library(ijk STATIC ${IJK_HDRS} ${IJK_SRCS} ${ASIO_HDRS} ${SPDLOG_HDRS})
-    target_link_libraries(ijk ${LIB_PLATFORM})
-endif()
+add_library(ijk INTERFACE)
+target_include_directories(ijk
+  INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
 if (BUILD_TESTS)
     include(tests/tests.cmake)
@@ -148,13 +126,7 @@ auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
 auto_install_files("" "${ASIO_ROOT}" ${ASIO_HDRS})
 auto_install_files("" "${SPDLOG_ROOT}" ${SPDLOG_HDRS})
 
-install(TARGETS ijk
-    RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-    ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}"
-    LIBRARY DESTINATION "${CMAKE_INSTALL_LIBDIR}")
-
 message(STATUS "")
-message(STATUS "BUILD_SHARED_LIBS:        " ${BUILD_SHARED_LIBS})
 message(STATUS "BUILD_TESTS:              " ${BUILD_TESTS})
 message(STATUS "BUILD_SAMPLES:            " ${BUILD_SAMPLES})
 message(STATUS "CMAKE_BINARY_DIR:         " ${CMAKE_BINARY_DIR})
@@ -182,4 +154,4 @@ message(STATUS "")
 
 set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_ROOT} ${SPDLOG_ROOT} CACHE STRING "ijk include directories")
 set(IJK_LIBRARIES ijk CACHE STRING "ijk libraries")
-
+set(IJK_SOURCE_FILES ${IJK_HDRS} ${ASIO_HDRS} ${SPDLOG_HDRS} CACHE STRING "ijk source feils")
