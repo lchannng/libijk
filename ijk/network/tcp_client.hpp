@@ -88,14 +88,26 @@ public:
         });
     }
 
-    bool isConnected() {return false;}
+    bool isConnected() { return status_ == connected;}
 
     void send(const std::string_view &data) {
-        if (!isConnected()) {
-            LOG_WARN("client is not connected");
-            return;
+        if (io_.running_in_this_thread()) {
+            if (!isConnected()) {
+                LOG_WARN("client is not connected");
+                return;
+            }
+            Expects(session_);
+            session_->send(data);
+        } else {
+            io_.post(
+                [this, self = shared_from_this(), d = std::string(data)]() {
+                    if (!isConnected()) {
+                        LOG_WARN("client is not connected");
+                        return;
+                    }
+                    session_->send(std::move(d));
+                });
         }
-        
     }
 
 private:

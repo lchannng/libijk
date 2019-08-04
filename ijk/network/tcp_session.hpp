@@ -22,26 +22,26 @@ public:
     using Ptr = std::shared_ptr<TcpSession>;
     using WeakPtr = std::weak_ptr<TcpSession>;
     using ReadCallback =
-        std::function<size_t(const Ptr &, const std::string_view &)>;
+        std::function<size_t(const Ptr&, const std::string_view&)>;
     using CloseCallback =
-        std::function<void(const Ptr &, const asio::error_code &)>;
+        std::function<void(const Ptr&, const asio::error_code&)>;
 
-    TcpSession(io_t &io)
+    TcpSession(io_t& io)
         : id_(++next_session_id_),
-          io_(io),
-          socket_(io_.context()),
-          writing_(false) {}
+        io_(io),
+        socket_(io_.context()),
+        writing_(false) {}
 
-    TcpSession(io_t &io, asio::ip::tcp::socket &&socket)
+    TcpSession(io_t& io, asio::ip::tcp::socket&& socket)
         : id_(++next_session_id_),
-          io_(io),
-          socket_(std::move(socket)),
-          writing_(false) {}
+        io_(io),
+        socket_(std::move(socket)),
+        writing_(false) {}
 
     ~TcpSession() {}
     inline uint64_t id() { return id_; }
 
-    inline asio::ip::tcp::socket &socket() { return socket_; } // not thread safe
+    inline asio::ip::tcp::socket& socket() { return socket_; } // not thread safe
 
     // not thread safe
     std::string localAddress() {
@@ -60,7 +60,8 @@ public:
         Expects(on_read_ != nullptr);
         if (io_.running_in_this_thread()) {
             postRead();
-        } else {
+        }
+        else {
             io_.post([this, self = shared_from_this()]() { postRead(); });
         }
     }
@@ -68,43 +69,74 @@ public:
     void stop() {
         if (io_.running_in_this_thread()) {
             onClose(shared_from_this(), asio::error_code());
-        } else {
+        }
+        else {
             io_.post([this, self = shared_from_this()]() {
                 onClose(self, asio::error_code());
             });
         }
     }
 
-    void send(const std::string_view &data) {
+    void send(const std::string_view& data) {
         if (io_.running_in_this_thread()) {
-            if (!socket_.is_open()) return;
-            send_queue_.push_back(std::string(data.data(), data.size()));
-            if (sending_queue_.empty())
-                postWrite();
+            doSend(data);
             return;
         }
 
         io_.post([this, self = shared_from_this(),
-                  d = std::string(data.data(), data.size())]() {
-            if (!socket_.is_open()) return;
-            send_queue_.push_back(std::move(d));
-            if (sending_queue_.empty()) postWrite();
+            d = std::string(data.data(), data.size())]() {
+            doSend(std::move(d));
         });
     }
 
-    TcpSession &onRead(ReadCallback &&cb) {
+    void send(std::string &&data) {
+        if (io_.running_in_this_thread()) {
+            doSend(std::move(data));
+            return;
+        }
+
+        io_.post([this, self = shared_from_this(),
+            d = std::move(data)]() {
+            doSend(std::move(d));
+        });
+    }
+
+    TcpSession& onRead(ReadCallback&& cb) {
         // Expects(io_.running_in_this_thread());
         on_read_ = std::forward<ReadCallback>(cb);
         return *this;
     }
 
-    TcpSession &onClosed(CloseCallback &&cb) {
+    TcpSession& onClosed(CloseCallback&& cb) {
         // Expects(io_.running_in_this_thread());
         on_closed_ = std::forward<CloseCallback>(cb);
         return *this;
     }
 
 private:
+    template <typename T>
+    struct IsStringType {
+        enum {
+            Value = std::is_same<std::decay<T>::type, std::string>::value ||
+                    std::is_same<std::decay<T>::type, std::string_view>::value,
+        };
+    };
+
+    template <typename T, typename U = std::decay<T>::type,
+              typename std::enable_if<IsStringType<U>::Value>::type* = 0>
+    inline void doSend(T&& data) {
+        if (!socket_.is_open()) return;
+
+        if constexpr (std::is_same<U, std::string_view>::value) {
+            send_queue_.push_back(std::string(data.data(), data.size()));
+        } else if constexpr (std::is_same<U, std::string>::value) {
+            send_queue_.push_back(std::forward<T>(data));
+        }
+
+        if (sending_queue_.empty())
+            postWrite();
+    }
+
     void postRead() {
         assert(io_.running_in_this_thread());
         Expects(socket_.is_open());
