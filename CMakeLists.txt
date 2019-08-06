@@ -110,16 +110,16 @@ target_include_directories(ijk
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
+set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_ROOT} ${SPDLOG_ROOT} CACHE STRING "ijk include directories")
+set(IJK_LIBRARIES ijk CACHE STRING "ijk libraries")
+set(IJK_SOURCE_FILES ${IJK_HDRS} ${ASIO_HDRS} ${SPDLOG_HDRS} CACHE STRING "ijk source feils")
+
 if (BUILD_TESTS)
-    include(tests/tests.cmake)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
 endif()
 
 if (BUILD_SAMPLES)
-    include(samples/samples.cmake)
-endif()
-
-if (BUILD_EXTRAS)
-    include(extras/rpc.cmake)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/samples)
 endif()
 
 auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
@@ -152,6 +152,3 @@ message(STATUS "CMAKE_INSTALL_LIBDIR:     " ${CMAKE_INSTALL_LIBDIR} )
 message(STATUS "CMAKE_INSTALL_BINDIR:     " ${CMAKE_INSTALL_BINDIR} )
 message(STATUS "")
 
-set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_ROOT} ${SPDLOG_ROOT} CACHE STRING "ijk include directories")
-set(IJK_LIBRARIES ijk CACHE STRING "ijk libraries")
-set(IJK_SOURCE_FILES ${IJK_HDRS} ${ASIO_HDRS} ${SPDLOG_HDRS} CACHE STRING "ijk source feils")
