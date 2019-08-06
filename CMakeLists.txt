@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_TESTS "Build unittests" ON)
 option(BUILD_SAMPLES "Build samples" ON)
 option(BUILD_EXTRAS "Build extra libraries" OFF)
+option(USE_BOOST_ASIO "Use boost asio instead of asio standalone" OFF)
 
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
     set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
@@ -66,19 +67,33 @@ elseif(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-add_definitions(-DASIO_STANDALONE)
-add_definitions(-DASIO_NO_DEPRECATED)
-
-set(SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ijk")
-set(ASIO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/asio")
 set(SPDLOG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/spdlog-1.3.1/include")
 
+
+if (USE_BOOST_ASIO)
+    find_package(Boost REQUIRED COMPONENTS asio)
+    # set(ASIO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/asio")
+else()
+    add_definitions(-DASIO_STANDALONE)
+    add_definitions(-DASIO_NO_DEPRECATED)
+    set(ASIO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/asio")
+
+    file(GLOB_RECURSE ASIO_HDRS
+        "${ASIO_ROOT}/*.h"
+        "${ASIO_ROOT}/*.hpp"
+        "${ASIO_ROOT}/*.ipp"
+        )
+
+    auto_install_files("" "${ASIO_ROOT}" ${ASIO_HDRS})
+endif()
+
 include_directories(
-    ${PROJECT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${ASIO_ROOT}
     ${SPDLOG_ROOT}
     )
 
+set(SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ijk")
 file(GLOB_RECURSE IJK_HDRS
     "${SRC_ROOT}/*.h"
     "${SRC_ROOT}/*.hpp"
@@ -86,22 +101,6 @@ file(GLOB_RECURSE IJK_HDRS
     )
 
 auto_source_group(ijk ${SRC_ROOT} ${IJK_HDRS})
-
-file(GLOB_RECURSE ASIO_HDRS
-    "${ASIO_ROOT}/*.h"
-    "${ASIO_ROOT}/*.hpp"
-    "${ASIO_ROOT}/*.ipp"
-    )
-
-auto_source_group(asio ${ASIO_ROOT} ${ASIO_HDRS})
-
-file(GLOB_RECURSE SPDLOG_HDRS
-    "${SPDLOG_ROOT}/*.h"
-    "${SPDLOG_ROOT}/*.hpp"
-    "${SPDLOG_ROOT}/*.ipp"
-    )
-
-auto_source_group(spdlog ${SPDLOG_ROOT} ${SPDLOG_HDRS})
 
 add_library(ijk INTERFACE)
 target_include_directories(ijk
@@ -111,8 +110,6 @@ target_include_directories(ijk
 )
 
 set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_ROOT} ${SPDLOG_ROOT} CACHE STRING "ijk include directories")
-set(IJK_LIBRARIES ijk CACHE STRING "ijk libraries")
-set(IJK_SOURCE_FILES ${IJK_HDRS} ${ASIO_HDRS} ${SPDLOG_HDRS} CACHE STRING "ijk source feils")
 
 if (BUILD_TESTS)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)
@@ -123,7 +120,13 @@ if (BUILD_SAMPLES)
 endif()
 
 auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
-auto_install_files("" "${ASIO_ROOT}" ${ASIO_HDRS})
+
+file(GLOB_RECURSE SPDLOG_HDRS
+    "${SPDLOG_ROOT}/*.h"
+    "${SPDLOG_ROOT}/*.hpp"
+    "${SPDLOG_ROOT}/*.ipp"
+    )
+
 auto_install_files("" "${SPDLOG_ROOT}" ${SPDLOG_HDRS})
 
 message(STATUS "")
