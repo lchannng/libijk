@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_TESTS "Build unittests" ON)
 option(BUILD_SAMPLES "Build samples" ON)
 option(BUILD_EXTRAS "Build extra libraries" OFF)
-option(USE_BOOST_ASIO "Use boost asio instead of asio standalone" OFF)
+option(USE_BOOST_ASIO "Use boost asio instead of asio standalone" ON)
 
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
     set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
@@ -69,27 +69,27 @@ endif()
 
 set(SPDLOG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/spdlog-1.3.1/include")
 
-
 if (USE_BOOST_ASIO)
-    find_package(Boost REQUIRED COMPONENTS asio)
-    # set(ASIO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/asio")
+    find_package(Boost REQUIRED COMPONENTS system)
+    add_definitions(-DBOOST_ASIO_NO_DEPRECATED)
+    set(ASIO_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
 else()
     add_definitions(-DASIO_STANDALONE)
     add_definitions(-DASIO_NO_DEPRECATED)
-    set(ASIO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/asio")
+    set(ASIO_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/deps/asio")
 
     file(GLOB_RECURSE ASIO_HDRS
-        "${ASIO_ROOT}/*.h"
-        "${ASIO_ROOT}/*.hpp"
-        "${ASIO_ROOT}/*.ipp"
+        "${ASIO_INCLUDE_DIRS}/*.h"
+        "${ASIO_INCLUDE_DIRS}/*.hpp"
+        "${ASIO_INCLUDE_DIRS}/*.ipp"
         )
 
-    auto_install_files("" "${ASIO_ROOT}" ${ASIO_HDRS})
+    auto_install_files("" "${ASIO_INCLUDE_DIRS}" ${ASIO_HDRS})
 endif()
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${ASIO_ROOT}
+    ${ASIO_INCLUDE_DIRS}
     ${SPDLOG_ROOT}
     )
 
@@ -109,7 +109,7 @@ target_include_directories(ijk
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_ROOT} ${SPDLOG_ROOT} CACHE STRING "ijk include directories")
+set(IJK_INCLUDE_DIRS ${PROJECT_SOURCE_DIR} ${ASIO_INCLUDE_DIRS} ${SPDLOG_ROOT} CACHE STRING "ijk include directories")
 
 if (BUILD_TESTS)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests)

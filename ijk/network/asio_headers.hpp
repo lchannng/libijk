@@ -12,9 +12,16 @@
 
 #include <asio.hpp>
 
-
 #else
-#error "boost asio..."
+
+#include <boost/asio.hpp>
+#include <boost/system/error_code.hpp>
+namespace asio {
+using namespace boost::asio;
+namespace errc = boost::system::errc;
+using boost::system::error_code;
+}  // namespace asio
+
 #endif
 
 #endif /* end of include guard:  ASIO_H_FRPC460D */
