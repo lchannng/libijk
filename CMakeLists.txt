@@ -69,10 +69,19 @@ endif()
 
 set(SPDLOG_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/deps/spdlog-1.3.1/include")
 
+if (WIN32)
+    set(CMAKE_REQUIRED_LIBRARIES  ws2_32.lib)
+    set(DEP_LIBS ws2_32 ${CMAKE_THREAD_LIBS_INIT})
+else()
+    set(DEP_LIBS ${CMAKE_THREAD_LIBS_INIT})
+endif()
+
+
 if (USE_BOOST_ASIO)
     find_package(Boost REQUIRED COMPONENTS system)
     add_definitions(-DBOOST_ASIO_NO_DEPRECATED)
     set(ASIO_INCLUDE_DIRS ${Boost_INCLUDE_DIRS})
+    list(APPEND DEP_LIBS ${DEP_LIBS} ${Boost_LIBRARIES})
 else()
     add_definitions(-DASIO_STANDALONE)
     add_definitions(-DASIO_NO_DEPRECATED)
@@ -103,6 +112,7 @@ file(GLOB_RECURSE IJK_HDRS
 auto_source_group(ijk ${SRC_ROOT} ${IJK_HDRS})
 
 add_library(ijk INTERFACE)
+target_link_libraries(ijk INTERFACE ${DEP_LIBS})
 target_include_directories(ijk
   INTERFACE
     $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}>
