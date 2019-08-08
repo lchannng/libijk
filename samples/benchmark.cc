@@ -10,6 +10,7 @@
 #include "ijk/base/mpmc_queue.h"
 #include "ijk/network/io_context_pool.hpp"
 
+#include <any>
 #include <iostream>
 #include <mutex>
 #include <shared_mutex>
@@ -17,7 +18,7 @@
 int main(int argc, char *argv[])
 {
     IJK_INITIALIZE_LOGGING();
-    const size_t kCount = 100000;
+    const size_t kCount = 1000000;
     ijk::Stopwatch sw;    
 
     int a = 0;
@@ -67,6 +68,22 @@ int main(int argc, char *argv[])
     }
     t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
     LOG_INFO("mpmc lockfree q push/pop: {} ns", (double)t / (double)kCount);
+
+    sw.start();
+    for (auto i = 0; i < kCount; ++i) {
+        auto arr = new char[i%513];
+        delete[] arr;
+    }
+    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    LOG_INFO("new/delete: {} ns", (double)t / (double)kCount);
+
+    std::any any;
+    sw.start();
+    for (auto i = 0; i < kCount; ++i) {
+        any = i;
+    }
+    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    LOG_INFO("any: {} ns", (double)t / (double)kCount);
 
     return 0;
 }
