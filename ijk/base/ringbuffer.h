@@ -14,7 +14,7 @@ namespace ijk {
 
 namespace {
 template <typename UnsignedType>
-UnsignedType NextPowerof2(UnsignedType v) {
+UnsignedType next_pow_of_2(UnsignedType v) {
     static_assert(std::is_unsigned<UnsignedType>::value,
                   "Only works for unsigned types");
     v--;
@@ -31,11 +31,11 @@ UnsignedType NextPowerof2(UnsignedType v) {
 
 // FIFO Ring Buffer
 template <typename T>
-class RingBuffer {
+class ring_buffer {
 public:
     using ItemType = T;
-    explicit RingBuffer(size_t max_items)
-        : max_items_(NextPowerof2(max_items)),
+    explicit ring_buffer(size_t max_items)
+        : max_items_(next_pow_of_2(max_items)),
           mask_(max_items_ - 1),
           container_(max_items_) {}
 

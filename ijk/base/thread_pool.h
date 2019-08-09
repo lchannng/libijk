@@ -18,12 +18,12 @@
 
 namespace ijk {
 
-class ThreadPool final {
+class threadpool final {
 public:
-    ThreadPool(size_t nthreads);
-    ~ThreadPool();
-    ThreadPool(const ThreadPool &) = delete;
-    ThreadPool &operator=(const ThreadPool &) = delete;
+    threadpool(size_t nthreads);
+    ~threadpool();
+    threadpool(const threadpool &) = delete;
+    threadpool &operator=(const threadpool &) = delete;
 
     template <class F, class... Args>
     auto submit(F &&f, Args &&... args)
@@ -37,7 +37,7 @@ private:
     bool stop_{false};
 };
 
-inline ThreadPool::ThreadPool(size_t nthreads) {
+inline threadpool::threadpool(size_t nthreads) {
     nthreads = nthreads > 0 ? nthreads : 1;
 
     for (int i = 0; i < nthreads; ++i) {
@@ -59,7 +59,7 @@ inline ThreadPool::ThreadPool(size_t nthreads) {
     }
 }
 
-inline ThreadPool::~ThreadPool() {
+inline threadpool::~threadpool() {
     {
         std::unique_lock<std::mutex> lock(mutex_);
         stop_ = true;
@@ -71,7 +71,7 @@ inline ThreadPool::~ThreadPool() {
 }
 
 template <typename F, typename... Args>
-inline auto ThreadPool::submit(F &&f, Args &&... args)
+inline auto threadpool::submit(F &&f, Args &&... args)
     -> std::future<typename std::result_of<F(Args...)>::type> {
     using return_type = typename std::result_of<F(Args...)>::type;
     auto task = std::make_shared<std::packaged_task<return_type()>>(

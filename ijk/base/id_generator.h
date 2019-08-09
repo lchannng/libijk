@@ -13,17 +13,17 @@
 #include <exception>
 
 namespace ijk {
-class IdGenerator {
+class id_generator {
     // Id = time(41bits)+ machine(10bits) + sequence(12bits)
 public:
-    IdGenerator(int machine_id) {
+    id_generator(int machine_id) {
         if (machine_id > kMaxMachineId)
             throw std::runtime_error("bad machine id");
         machine_id_ = machine_id;
     }
 
-    int64_t nextId() {
-        int64_t now = timeGen();
+    int64_t next_id() {
+        int64_t now = time_gen();
 
         if (now < last_timestamp_) {
             // clock is moving backwards
@@ -34,7 +34,7 @@ public:
         if (last_timestamp_ == now) {
             sequence_ = (sequence_ + 1) & kSequenceMask;
             if (0 == sequence_) {
-                now = tilNextMillis(now);
+                now = til_next_millis(now);
             }
         } else {
             sequence_ = 0;
@@ -44,7 +44,7 @@ public:
                sequence_;
     }
 
-    static void getInfo(int64_t id, int64_t *create_time, int *machine_id,
+    static void get_info(int64_t id, int64_t *create_time, int *machine_id,
                         int *seq) {
         if (create_time)
             *create_time = ((id >> kTimeShift) & kTimeMask) + kEpoch;
@@ -53,17 +53,17 @@ public:
     }
 
 private:
-    int64_t timeGen() {
+    int64_t time_gen() {
         using namespace std::chrono;
         auto duration = system_clock::now().time_since_epoch();
         auto ms = duration_cast<milliseconds>(duration).count();
         return ms;
     }
 
-    int64_t tilNextMillis(int64_t now) {
+    int64_t til_next_millis(int64_t now) {
         int64_t t;
         do {
-            t = timeGen();
+            t = time_gen();
         } while (t <= now);
         return t;
     }

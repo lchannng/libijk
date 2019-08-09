@@ -9,12 +9,12 @@
 #define _NONCOPYABLE_H
 
 namespace ijk {
-class Noncopyable {
+class noncopyable {
 protected:
-    Noncopyable() = default;
-    ~Noncopyable() = default;
-    Noncopyable(const Noncopyable&) = delete;
-    Noncopyable& operator=(const Noncopyable&) = delete;
+    noncopyable() = default;
+    ~noncopyable() = default;
+    noncopyable(const noncopyable&) = delete;
+    noncopyable& operator=(const noncopyable&) = delete;
 };
 }  // namespace ijk
 

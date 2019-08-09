@@ -19,7 +19,7 @@
 #include <chrono>
 
 namespace ijk {
-class TcpClient : private Noncopyable, public std::enable_shared_from_this<TcpClient> {
+class TcpClient : private noncopyable, public std::enable_shared_from_this<TcpClient> {
 public:
     using Ptr = std::shared_ptr<TcpClient>;
     using ConnectCallback = std::function<void(const Ptr &)>;

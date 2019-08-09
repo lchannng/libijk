@@ -5,8 +5,8 @@
  * Created Time: Thu 07 Sep 2017 11:27:05 PM CST
  */
 
-#ifndef _kitxx_base_H
-#define _kitxx_base_H
+#ifndef _IJK_BASE_H
+#define _IJK_BASE_H
 
 #include "base/cancel_token.h"
 #include "base/endian.h"

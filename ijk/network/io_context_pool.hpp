@@ -19,7 +19,7 @@
 #include "ijk/base/noncopyable.h"
 
 namespace ijk {
-class io_t final : private Noncopyable {
+class io_t final : private noncopyable {
 public:
     io_t() = default;
     ~io_t() = default;
@@ -62,7 +62,7 @@ private:
 /**
  * io_context pool
  */
-class io_context_pool final : private Noncopyable {
+class io_context_pool final : private noncopyable {
 public:
     /**
      * @constructor

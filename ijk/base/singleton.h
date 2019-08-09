@@ -14,20 +14,20 @@
 namespace ijk {
 
 template <typename T>
-class Singleton {
+class singleton {
 public:
     static T &instance() {
-        std::call_once(once_, Singleton::init);
+        std::call_once(once_, singleton::init);
         return *instance_;
     }
 
 private:
-    Singleton();
-    ~Singleton();
+    singleton() = default;
+    ~singleton() = default;
 
     static void init() {
         instance_ = new T();
-        ::atexit(Singleton::destroy);
+        ::atexit(singleton::destroy);
     }
 
     static void destroy() { delete instance_; }
@@ -38,10 +38,10 @@ private:
 };  // class Singleton
 
 template <typename T>
-T *Singleton<T>::instance_ = NULL;
+T *singleton<T>::instance_ = NULL;
 
 template <typename T>
-std::once_flag Singleton<T>::once_;
+std::once_flag singleton<T>::once_;
 
 }  // namespace ijk
 #endif

@@ -18,7 +18,7 @@
 
 namespace ijk {
 
-class TcpAcceptor final : public Noncopyable {
+class TcpAcceptor final : public noncopyable {
 public:
     using AcceptCallback =
         std::function<void(TcpSession::Ptr &&)>;

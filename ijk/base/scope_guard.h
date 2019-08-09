@@ -12,15 +12,15 @@
 
 namespace ijk {
 
-class ScopeGuard final {
+class scope_guard final {
 public:
-    ScopeGuard(std::function<void(void)> &&on_exit)
+    scope_guard(std::function<void(void)> &&on_exit)
         : on_exit_(std::move(on_exit)), dismissed_(false) {}
 
-    ScopeGuard(const std::function<void(void)> &on_exit)
+    scope_guard(const std::function<void(void)> &on_exit)
         : on_exit_(on_exit), dismissed_(false) {}
 
-    ~ScopeGuard() {
+    ~scope_guard() {
         if (!dismissed_) on_exit_();
     }
 
