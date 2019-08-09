@@ -9,7 +9,6 @@
 #define TCP_SERVICE_H_PZITAISO
 
 #include "io_context_pool.hpp"
-#include "tcp_session.hpp"
 
 #include "ijk/base/cancel_token.h"
 #include "ijk/base/gsl.h"
@@ -18,12 +17,12 @@
 
 namespace ijk {
 
-class TcpAcceptor final : public noncopyable {
+class tcp_acceptor final : public noncopyable {
 public:
-    using AcceptCallback =
-        std::function<void(TcpSession::Ptr &&)>;
+    using accept_callback =
+        std::function<void(asio::ip::tcp::socket &&, io_t &io)>;
 
-    TcpAcceptor(io_t &io, const asio::ip::tcp::endpoint &ep,
+    tcp_acceptor(io_t &io, const asio::ip::tcp::endpoint &ep,
                 io_context_pool *io_pool = nullptr)
         : io_(io), io_pool_(io_pool), token_(makeCancelToken()), timer_(io.context()) {
         try {
@@ -34,11 +33,12 @@ public:
         }
     }
 
-    ~TcpAcceptor() = default;
-    void start(AcceptCallback &&cb) {
-        accept_cb_ = std::forward<AcceptCallback>(cb);
+    ~tcp_acceptor() = default;
+
+    void start(accept_callback &&cb) {
+        accept_cb_ = std::forward<accept_callback>(cb);
         Ensures(accept_cb_);
-        doAccept();
+        do_accept();
     }
 
     void stop() {
@@ -54,12 +54,12 @@ public:
     }
 
 private:
-    io_t* nextIo() {
+    io_t* next_io() {
         return &(io_pool_ != nullptr ? io_pool_->get() : io_);
     }
 
-    void doAccept() {
-        auto io = nextIo();
+    void do_accept() {
+        auto io = next_io();
         acceptor_->async_accept(io->context(), [this, io, wt = WeakCancelToken(token_)](auto &ec, auto socket) {
             if (wt.expired()) return;
             if (ec) {
@@ -67,13 +67,12 @@ private:
                 timer_.expires_after(std::chrono::seconds(3));
                 timer_.async_wait([this, wt](auto &ec) {
                     if (wt.expired()) return;
-                    doAccept();
+                    do_accept();
                 });
                 return;
             }
-            auto sess = std::make_shared<TcpSession>(*io, std::move(socket));
-            accept_cb_(std::move(sess));
-            doAccept();
+            accept_cb_(std::move(socket), *io);
+            do_accept();
         });
     }
 
@@ -81,7 +80,7 @@ private:
     io_t &io_;
     io_context_pool *io_pool_;
     std::unique_ptr<asio::ip::tcp::acceptor> acceptor_;
-    AcceptCallback accept_cb_;
+    accept_callback accept_cb_;
     asio::steady_timer timer_;
     SharedCancelToken token_;
 };

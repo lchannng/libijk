@@ -14,21 +14,21 @@ int main(int argc, char *argv[]) {
     IJK_INITIALIZE_LOGGING();
     ijk::io_t io;
     asio::ip::tcp::endpoint ep(asio::ip::address_v4::loopback(), 4000);
-    auto client = TcpClient::create(io);
+    auto client = tcp_client::create(io);
     client
-        ->onConnected([](auto &c) {
+        ->on_connected([](auto &c) {
             LOG_INFO("client is connected");
             c->send("111111");
         })
-        .onDisconnected([](auto &, auto &ec) {
+        .on_disconnected([](auto &, auto &ec) {
             LOG_INFO("cient disconnected with error: {}", ec);
         })
-        .onRead([](auto &c, auto &data) {
+        .on_read([](auto &c, auto &data) {
             c->send(data);
             return data.size();
         })
-        .connectTimeout(std::chrono::milliseconds(5000))
-        //.reconnectInterval(std::chrono::milliseconds(3000))
+        .connect_timeout(std::chrono::milliseconds(5000))
+        //.reconnect_interval(std::chrono::milliseconds(3000))
         .connect(ep);
     io.run();
 

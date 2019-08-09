@@ -8,6 +8,7 @@
 #include "ijk/base/logging.hpp"
 #include "ijk/network/asio_headers.hpp"
 #include "ijk/network/tcp_acceptor.hpp"
+#include "ijk/network/tcp_session.hpp"
 
 using namespace ijk;
 
@@ -17,13 +18,14 @@ int main(int argc, char *argv[]) {
     asio::ip::tcp::endpoint ep(asio::ip::address_v4::loopback(), 4000);
 
     LOG_INFO("server start at {}", ep);
-    TcpAcceptor acceptor(pool.get(0), ep, &pool);
-    acceptor.start([](TcpSession::Ptr &&sess) {
-        sess->onRead([](auto &s, auto &data) {
+    tcp_acceptor acceptor(pool.get(0), ep, &pool);
+    acceptor.start([](auto &&socket, auto &io) {
+        auto sess = std::make_shared<tcp_session>(io, std::move(socket));
+        sess->on_read([](auto &s, auto &data) {
                 s->send(data);
                 return data.size();
             })
-            .onClosed([](auto &s, auto &ec) {
+            .on_closed([](auto &s, auto &ec) {
                 // LOG_INFO("session {} closed: {}", s->id(), ec);
             })
             .start();

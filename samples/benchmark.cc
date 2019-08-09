@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 {
     IJK_INITIALIZE_LOGGING();
     const size_t kCount = 1000000;
-    ijk::Stopwatch sw;    
+    ijk::stopwatch sw;    
 
     int a = 0;
 
@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
         std::unique_lock l(m);
         a = i; 
     }
-    auto t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    auto t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("mutex op: {} ns", (double)t / (double)kCount);
 
     std::shared_mutex sm;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
         std::shared_lock l(sm);
         a = i; 
     }
-    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("shared mutex op: {} ns", (double)t / (double)kCount);
 
     ijk::io_t io;
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
     for (auto i = 0; i < kCount; ++i) {
         io.running_in_this_thread();
     }
-    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("io.running_in_this_thread: {} ns", (double)t / (double)kCount);
 
     size_t item;
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         blocking_q.push(item);
         blocking_q.pop_nowait(item);
     }
-    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("mpmc blocking q push/pop: {} ns", (double)t / (double)kCount);
 
     ijk::mpmc_bounded_queue<size_t> lockfree_q(128);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
         lockfree_q.enqueue((size_t &&)item);
         lockfree_q.dequeue(item);
     }
-    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("mpmc lockfree q push/pop: {} ns", (double)t / (double)kCount);
 
     sw.start();
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
         auto arr = new char[i%513];
         delete[] arr;
     }
-    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("new/delete: {} ns", (double)t / (double)kCount);
 
     std::any any;
@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
     for (auto i = 0; i < kCount; ++i) {
         any = i;
     }
-    t = sw.elapsed<ijk::Stopwatch::NANOSECONDS>();
+    t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("any: {} ns", (double)t / (double)kCount);
 
     return 0;

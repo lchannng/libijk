@@ -17,40 +17,40 @@
 #include <string_view>
 
 namespace ijk {
-class TcpSession final : public std::enable_shared_from_this<TcpSession> {
+class tcp_session final : public std::enable_shared_from_this<tcp_session> {
 public:
-    using Ptr = std::shared_ptr<TcpSession>;
-    using WeakPtr = std::weak_ptr<TcpSession>;
-    using ReadCallback =
-        std::function<size_t(const Ptr&, const std::string_view&)>;
-    using CloseCallback =
-        std::function<void(const Ptr&, const asio::error_code&)>;
+    using ptr = std::shared_ptr<tcp_session>;
+    using weak_ptr = std::weak_ptr<tcp_session>;
+    using read_callback =
+        std::function<size_t(const ptr&, const std::string_view&)>;
+    using close_callback =
+        std::function<void(const ptr&, const asio::error_code&)>;
 
-    TcpSession(io_t& io)
+    tcp_session(io_t& io)
         : id_(++next_session_id_),
         io_(io),
         socket_(io_.context()),
         writing_(false) {}
 
-    TcpSession(io_t& io, asio::ip::tcp::socket&& socket)
+    tcp_session(io_t& io, asio::ip::tcp::socket&& socket)
         : id_(++next_session_id_),
         io_(io),
         socket_(std::move(socket)),
         writing_(false) {}
 
-    ~TcpSession() {}
+    ~tcp_session() {}
     inline uint64_t id() { return id_; }
 
     inline asio::ip::tcp::socket& socket() { return socket_; } // not thread safe
 
     // not thread safe
-    std::string localAddress() {
+    std::string local_address() {
         if (!socket_.is_open()) return std::string();
         auto ep = socket_.local_endpoint();
         return ep.address().to_string() + ":" + std::to_string(ep.port());
     }
 
-    std::string remoteAddress() { // not thread safe
+    std::string remote_address() { // not thread safe
         if (!socket_.is_open()) return std::string();
         auto ep = socket_.remote_endpoint();
         return ep.address().to_string() + ":" + std::to_string(ep.port());
@@ -59,57 +59,57 @@ public:
     void start() {
         Expects(on_read_ != nullptr);
         if (io_.running_in_this_thread()) {
-            postRead();
+            post_read();
         }
         else {
-            io_.post([this, self = shared_from_this()]() { postRead(); });
+            io_.post([this, self = shared_from_this()]() { post_read(); });
         }
     }
 
     void stop() {
         if (io_.running_in_this_thread()) {
-            onClose(shared_from_this(), asio::error_code());
+            do_close(shared_from_this(), asio::error_code());
         }
         else {
             io_.post([this, self = shared_from_this()]() {
-                onClose(self, asio::error_code());
+                do_close(self, asio::error_code());
             });
         }
     }
 
     void send(const std::string_view& data) {
         if (io_.running_in_this_thread()) {
-            doSend(data);
+            do_send(data);
             return;
         }
 
         io_.post([this, self = shared_from_this(),
             d = std::string(data.data(), data.size())]() {
-            doSend(std::move(d));
+            do_send(std::move(d));
         });
     }
 
     void send(std::string &&data) {
         if (io_.running_in_this_thread()) {
-            doSend(std::move(data));
+            do_send(std::move(data));
             return;
         }
 
         io_.post([this, self = shared_from_this(),
             d = std::move(data)]() {
-            doSend(std::move(d));
+            do_send(std::move(d));
         });
     }
 
-    TcpSession& onRead(ReadCallback&& cb) {
+    tcp_session& on_read(read_callback&& cb) {
         // Expects(io_.running_in_this_thread());
-        on_read_ = std::forward<ReadCallback>(cb);
+        on_read_ = std::forward<read_callback>(cb);
         return *this;
     }
 
-    TcpSession& onClosed(CloseCallback&& cb) {
+    tcp_session& on_closed(close_callback&& cb) {
         // Expects(io_.running_in_this_thread());
-        on_closed_ = std::forward<CloseCallback>(cb);
+        on_closed_ = std::forward<close_callback>(cb);
         return *this;
     }
 
@@ -124,7 +124,7 @@ private:
 
     template <typename T, typename U = std::decay<T>::type,
               typename std::enable_if<IsStringType<U>::Value>::type* = 0>
-    inline void doSend(T&& data) {
+    inline void do_send(T&& data) {
         if (!socket_.is_open()) return;
 
         if constexpr (std::is_same<U, std::string_view>::value) {
@@ -134,10 +134,10 @@ private:
         }
 
         if (sending_queue_.empty())
-            postWrite();
+            post_write();
     }
 
-    void postRead() {
+    void post_read() {
         assert(io_.running_in_this_thread());
         Expects(socket_.is_open());
         recv_buf_.reserve(4096);
@@ -146,7 +146,7 @@ private:
                          recv_buf_.writeable_bytes()),
             [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
                 if (ec) {
-                    onClose(self, ec);
+                    do_close(self, ec);
                     return;
                 }
                 recv_buf_.commit(bytes_transfered);
@@ -156,11 +156,11 @@ private:
                                                recv_buf_.size()));
                     recv_buf_.consume(nbytes);
                 }
-                postRead();
+                post_read();
             });
     }
 
-    void postWrite() {
+    void post_write() {
         assert(io_.running_in_this_thread());
         sending_buffers_.clear();
         sending_queue_.clear();
@@ -176,14 +176,14 @@ private:
             socket_, sending_buffers_,
             [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
                 if (ec) {
-                    onClose(self, ec);
+                    do_close(self, ec);
                     return;
                 }
-                postWrite();
+                post_write();
             });
     }
 
-    void onClose(const Ptr &self, const asio::error_code &ec) {
+    void do_close(const ptr &self, const asio::error_code &ec) {
         assert(io_.running_in_this_thread());
         if (on_closed_) on_closed_(self, ec);
         on_closed_ = nullptr;
@@ -204,8 +204,8 @@ private:
     std::list<std::string> send_queue_;
     std::list<std::string> sending_queue_;
     std::vector<asio::const_buffer> sending_buffers_;
-    ReadCallback on_read_;
-    CloseCallback on_closed_;
+    read_callback on_read_;
+    close_callback on_closed_;
     bool writing_;
 };
 
