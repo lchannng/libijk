@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("io.running_in_this_thread: {} ns", (double)t / (double)kCount);
 
-    size_t item;
+    size_t item = 0;
     ijk::mpmc_blocking_q<size_t> blocking_q;
     sw.start();
     for (auto i = 0; i < kCount; ++i) {

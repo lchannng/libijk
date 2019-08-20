@@ -153,3 +153,8 @@ function(REMOVE_MATCHES_FROM_LISTS)
     set(${theList} ${${theList}} PARENT_SCOPE)
   endforeach()
 endfunction()
+
+macro(ijk_add_executable target_name folder_name)
+    add_executable(${target_name} ${ARGN})
+    set_target_properties(${target_name} PROPERTIES FOLDER ${folder_name})
+endmacro(add_sample name)

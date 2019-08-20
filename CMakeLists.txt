@@ -23,6 +23,8 @@ if(NOT CMAKE_BUILD_TYPE)
         CACHE STRING "Set build type to Debug o Release (default Debug)" FORCE)
 endif()
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 #include("${CMAKE_CURRENT_SOURCE_DIR}/configure.cmake")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/utils.cmake")

@@ -11,5 +11,5 @@ file(GLOB TESTS_SRCS
 
 message(STATUS ${CATCH2_})
 
-add_executable(ijk-tests ${TESTS_SRCS})
+ijk_add_executable(ijk-tests "unittests" ${TESTS_SRCS})
 target_link_libraries(ijk-tests ijk Catch2::Catch2)
