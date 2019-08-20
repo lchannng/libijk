@@ -23,6 +23,7 @@ int main(int argc, char *argv[]) {
         auto sess = tcp_session::create(io, std::move(socket));
         sess->on_read([](auto &s, auto &data) {
                 s->send(data);
+                // s->shutdown();
                 return data.size();
             })
             .on_closed([](auto &s, auto &ec) {
