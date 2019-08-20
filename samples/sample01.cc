@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     LOG_INFO("server start at {}", ep);
     tcp_acceptor acceptor(pool.get(0), ep, &pool);
     acceptor.start([](auto &&socket, auto &io) {
-        auto sess = std::make_shared<tcp_session>(io, std::move(socket));
+        auto sess = tcp_session::create(io, std::move(socket));
         sess->on_read([](auto &s, auto &data) {
                 s->send(data);
                 return data.size();

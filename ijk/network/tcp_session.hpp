@@ -26,6 +26,12 @@ public:
     using close_callback =
         std::function<void(const ptr&, const asio::error_code&)>;
 
+    static ptr create(io_t& io) { return std::make_shared<tcp_session>(io); }
+
+    static ptr create(io_t& io, asio::ip::tcp::socket&& socket) {
+        return std::make_shared<tcp_session>(io, std::move(socket));
+    }
+
     tcp_session(io_t& io)
         : id_(++next_session_id_),
         io_(io),

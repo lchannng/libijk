@@ -121,7 +121,7 @@ private:
     void do_connect() {
         status_ = connecting;
         token_ = makeCancelToken();
-        session_ = std::make_shared<tcp_session>(io_);
+        session_ = tcp_session::create(io_);
         session_->socket().async_connect(
             opts_.endpoint, [this, wt = WeakCancelToken(token_)](auto &ec) {
                 if (wt.expired()) return;
