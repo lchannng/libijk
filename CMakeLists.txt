@@ -131,6 +131,8 @@ if (BUILD_SAMPLES)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/samples)
 endif()
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extras)
+
 auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
 
 file(GLOB_RECURSE SPDLOG_HDRS
