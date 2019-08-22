@@ -5,9 +5,10 @@
  */
 
 #include "ijk/base/logging.hpp"
-#include "ijk/base/stopwatch.h"
 #include "ijk/base/mpmc_blocking_q.hpp"
 #include "ijk/base/mpmc_queue.h"
+#include "ijk/base/random.h"
+#include "ijk/base/stopwatch.h"
 #include "ijk/network/io_context_pool.hpp"
 
 #include <any>
@@ -84,6 +85,30 @@ int main(int argc, char *argv[])
     }
     t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("any: {} ns", (double)t / (double)kCount);
+
+    std::unordered_map<std::string, int> umap;
+    for (auto i = 0; i < 100; ++i) {
+        umap.emplace(ijk::randomString(i%12 + 15), i);
+    }
+    sw.start();
+
+    std::string ip = "172.0.0.1:4000";
+    for (auto i = 0; i < kCount; ++i) {
+        umap.find(ip);
+    }
+    t = sw.elapsed<ijk::stopwatch::ns>();
+    LOG_INFO("unordered map<string,int>: {} ns", (double)t / (double)kCount);
+
+    std::unordered_map<int, int> iumap;
+    for (int i = 0; i < 100; ++i) {
+        iumap.emplace(i, i);
+    }
+    sw.start();
+    for (auto i = 0; i < kCount; ++i) {
+        iumap.find(i);
+    }
+    t = sw.elapsed<ijk::stopwatch::ns>();
+    LOG_INFO("unordered map<int,int>: {} ns", (double)t / (double)kCount);
 
     return 0;
 }
