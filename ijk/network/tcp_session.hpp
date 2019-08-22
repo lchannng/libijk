@@ -12,6 +12,7 @@
 
 #include "ijk/base/buffer.h"
 #include "ijk/base/gsl.h"
+#include "ijk/base/logging.hpp"
 
 #include <cassert>
 #include <string_view>
@@ -78,7 +79,7 @@ public:
 
     void shutdown() {
         io_.dispatch([this, self = shared_from_this()]() {
-            if (closed_) return;
+            if (is_closing_or_closed()) return;
             closing_ = true;
             if (!is_sending()) {
                 do_close(self, asio::error_code());
@@ -88,13 +89,13 @@ public:
 
     void force_shutdown() {
         io_.dispatch([this, self = shared_from_this()]() {
-            if (closed_) return;
+            if (is_closing_or_closed()) return;
             do_close(self, asio::error_code());
         });
     }
 
     void send(const std::string_view& data) {
-        if (closing_ || closed_) return;
+        if (is_closing_or_closed()) return;
         if (io_.running_in_this_thread()) {
             do_send(data);
             return;
@@ -107,7 +108,7 @@ public:
     }
 
     void send(std::string&& data) {
-        if (closing_ || closed_) return;
+        if (is_closing_or_closed()) return;
         if (io_.running_in_this_thread()) {
             do_send(std::move(data));
             return;
@@ -142,7 +143,7 @@ private:
     template <typename T, typename U = std::decay<T>::type,
               typename std::enable_if<IsStringType<U>::Value>::type* = 0>
     inline void do_send(T&& data) {
-        if (!socket_.is_open()) return;
+        if (is_closing_or_closed()) return;
 
         if constexpr (std::is_same<U, std::string_view>::value) {
             send_queue_.push_back(std::string(data.data(), data.size()));
@@ -226,6 +227,8 @@ private:
     bool is_sending() {
         return !(sending_queue_.empty() && send_queue_.empty());
     }
+
+    bool is_closing_or_closed() { return closed_ || closing_; }
 
 private:
     inline static std::atomic_uint64_t next_session_id_{0};

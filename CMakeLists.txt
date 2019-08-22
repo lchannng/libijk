@@ -104,14 +104,12 @@ include_directories(
     ${SPDLOG_ROOT}
     )
 
-set(SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ijk")
+set(IJK_SRC_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/ijk")
 file(GLOB_RECURSE IJK_HDRS
-    "${SRC_ROOT}/*.h"
-    "${SRC_ROOT}/*.hpp"
-    "${SRC_ROOT}/*.ipp"
+    "${IJK_SRC_ROOT}/*.h"
+    "${IJK_SRC_ROOT}/*.hpp"
+    "${IJK_SRC_ROOT}/*.ipp"
     )
-
-auto_source_group(ijk ${SRC_ROOT} ${IJK_HDRS})
 
 add_library(ijk INTERFACE)
 target_link_libraries(ijk INTERFACE ${DEP_LIBS})
@@ -133,7 +131,7 @@ endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extras)
 
-auto_install_files(ijk "${SRC_ROOT}" ${IJK_HDRS})
+auto_install_files(ijk "${IJK_SRC_ROOT}" ${IJK_HDRS})
 
 file(GLOB_RECURSE SPDLOG_HDRS
     "${SPDLOG_ROOT}/*.h"

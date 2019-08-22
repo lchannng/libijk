@@ -9,5 +9,7 @@ file(GLOB TESTS_SRCS
     "${TESTS_ROOT}/*.cpp"
     )
 
-ijk_add_executable(ijk-tests "unittests" ${TESTS_SRCS})
+auto_source_group(ijk ${IJK_SRC_ROOT} ${IJK_HDRS})
+
+ijk_add_executable(ijk-tests "unittests" ${TESTS_SRCS} ${IJK_HDRS})
 target_link_libraries(ijk-tests ijk Catch2::Catch2)
