@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_TESTS "Build unittests" ON)
 option(BUILD_SAMPLES "Build samples" ON)
 option(BUILD_EXTRAS "Build extra libraries" OFF)
-option(USE_BOOST_ASIO "Use boost asio instead of asio standalone" ON)
+option(USE_BOOST_ASIO "Use boost asio instead of asio standalone" OFF)
 
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
     set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
