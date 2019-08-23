@@ -202,7 +202,7 @@ private:
 
         asio::async_write(
             socket_, sending_buffers_,
-            [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
+            [this, self = shared_from_this()](auto &ec, auto) {
                 if (ec) {
                     do_close(self, ec);
                     return;
