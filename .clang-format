@@ -12,4 +12,6 @@ UseTab: Never
 Language: Cpp
 AccessModifierOffset: -4
 AllowShortFunctionsOnASingleLine: Inline
+DerivePointerAlignment: false
+PointerAlignment: Right
 ...

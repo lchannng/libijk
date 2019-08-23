@@ -18,40 +18,41 @@
 #include <string_view>
 
 namespace ijk {
-class tcp_session final : public std::enable_shared_from_this<tcp_session> {
+class tcp_connection final
+    : public std::enable_shared_from_this<tcp_connection> {
 public:
-    using ptr = std::shared_ptr<tcp_session>;
-    using weak_ptr = std::weak_ptr<tcp_session>;
+    using ptr = std::shared_ptr<tcp_connection>;
+    using weak_ptr = std::weak_ptr<tcp_connection>;
     using read_callback =
-        std::function<size_t(const ptr&, const std::string_view&)>;
+        std::function<size_t(const ptr &, const std::string_view &)>;
     using close_callback =
-        std::function<void(const ptr&, const asio::error_code&)>;
+        std::function<void(const ptr &, const asio::error_code &)>;
 
-    static ptr create(io_t& io) { return std::make_shared<tcp_session>(io); }
+    static ptr create(io_t &io) { return std::make_shared<tcp_connection>(io); }
 
-    static ptr create(io_t& io, asio::ip::tcp::socket&& socket) {
-        return std::make_shared<tcp_session>(io, std::move(socket));
+    static ptr create(io_t &io, asio::ip::tcp::socket &&socket) {
+        return std::make_shared<tcp_connection>(io, std::move(socket));
     }
 
-    tcp_session(io_t& io)
+    tcp_connection(io_t &io)
         : id_(++next_session_id_),
           io_(io),
           socket_(io_.context()),
           closing_(false),
           closed_(false) {}
 
-    tcp_session(io_t& io, asio::ip::tcp::socket&& socket)
+    tcp_connection(io_t &io, asio::ip::tcp::socket &&socket)
         : id_(++next_session_id_),
           io_(io),
           socket_(std::move(socket)),
           closing_(false),
           closed_(false) {}
 
-    ~tcp_session() {}
+    ~tcp_connection() {}
 
     inline uint64_t id() { return id_; }
 
-    inline asio::ip::tcp::socket& socket() {
+    inline asio::ip::tcp::socket &socket() {
         return socket_;
     }  // not thread safe
 
@@ -94,7 +95,7 @@ public:
         });
     }
 
-    void send(const std::string_view& data) {
+    void send(const std::string_view &data) {
         if (is_closing_or_closed()) return;
         if (io_.running_in_this_thread()) {
             do_send(data);
@@ -107,7 +108,7 @@ public:
         });
     }
 
-    void send(std::string&& data) {
+    void send(std::string &&data) {
         if (is_closing_or_closed()) return;
         if (io_.running_in_this_thread()) {
             do_send(std::move(data));
@@ -119,13 +120,13 @@ public:
         });
     }
 
-    tcp_session& on_read(read_callback&& cb) {
+    tcp_connection &on_read(read_callback &&cb) {
         // Expects(io_.running_in_this_thread());
         on_read_ = std::forward<read_callback>(cb);
         return *this;
     }
 
-    tcp_session& on_closed(close_callback&& cb) {
+    tcp_connection &on_closed(close_callback &&cb) {
         // Expects(io_.running_in_this_thread());
         on_closed_ = std::forward<close_callback>(cb);
         return *this;
@@ -141,8 +142,8 @@ private:
     };
 
     template <typename T, typename U = std::decay<T>::type,
-              typename std::enable_if<IsStringType<U>::Value>::type* = 0>
-    inline void do_send(T&& data) {
+              typename std::enable_if<IsStringType<U>::Value>::type * = 0>
+    inline void do_send(T &&data) {
         if (is_closing_or_closed()) return;
 
         if constexpr (std::is_same<U, std::string_view>::value) {
@@ -164,16 +165,16 @@ private:
         socket_.async_read_some(
             asio::buffer(recv_buf_.writable_head(),
                          recv_buf_.writeable_bytes()),
-            [this, self = shared_from_this()](auto& ec, auto bytes_transfered) {
+            [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
                 if (ec) {
                     do_close(self, ec);
                     return;
                 }
                 recv_buf_.commit(bytes_transfered);
                 if (on_read_) {
-                    size_t nbytes =
-                        on_read_(self, std::string_view((char*)recv_buf_.data(),
-                                                        recv_buf_.size()));
+                    size_t nbytes = on_read_(
+                        self, std::string_view((char *)recv_buf_.data(),
+                                               recv_buf_.size()));
                     recv_buf_.consume(nbytes);
                 }
                 post_read();
@@ -194,14 +195,14 @@ private:
 
         if (!socket_.is_open()) return;
         sending_queue_.swap(send_queue_);
-        for (const auto& data : sending_queue_) {
+        for (const auto &data : sending_queue_) {
             sending_buffers_.emplace_back(
                 asio::buffer(data.data(), data.size()));
         }
 
         asio::async_write(
             socket_, sending_buffers_,
-            [this, self = shared_from_this()](auto& ec, auto bytes_transfered) {
+            [this, self = shared_from_this()](auto &ec, auto bytes_transfered) {
                 if (ec) {
                     do_close(self, ec);
                     return;
@@ -210,7 +211,7 @@ private:
             });
     }
 
-    void do_close(const ptr& self, const asio::error_code& ec) {
+    void do_close(const ptr &self, const asio::error_code &ec) {
         assert(io_.running_in_this_thread());
         closing_ = false;
         closed_ = true;
@@ -233,7 +234,7 @@ private:
 private:
     inline static std::atomic_uint64_t next_session_id_{0};
     uint64_t id_;
-    io_t& io_;
+    io_t &io_;
     asio::ip::tcp::socket socket_;
     buffer recv_buf_;
     std::list<std::string> send_queue_;

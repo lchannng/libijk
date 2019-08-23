@@ -9,7 +9,7 @@
 #define TCP_CLIENT_HPP_B8QMLVHX
 
 #include "io_context_pool.hpp"
-#include "tcp_session.hpp"
+#include "tcp_connection.hpp"
 
 #include "ijk/base/cancel_token.h"
 #include "ijk/base/logging.hpp"
@@ -19,13 +19,16 @@
 #include <chrono>
 
 namespace ijk {
-class tcp_client : private noncopyable, public std::enable_shared_from_this<tcp_client> {
+class tcp_client : private noncopyable,
+                   public std::enable_shared_from_this<tcp_client> {
 public:
     using ptr = std::shared_ptr<tcp_client>;
     using connect_callback = std::function<void(const ptr &)>;
     using connecting_callback = std::function<void(const ptr &)>;
-    using disconnect_callback = std::function<void(const ptr &, const asio::error_code &)>;
-    using read_callback = std::function<size_t(const ptr &, const std::string_view &data)>;
+    using disconnect_callback =
+        std::function<void(const ptr &, const asio::error_code &)>;
+    using read_callback =
+        std::function<size_t(const ptr &, const std::string_view &data)>;
 
     static ptr create(io_t &io) {
         class MakeSharedProxy : public tcp_client {
@@ -35,7 +38,7 @@ public:
         return std::make_shared<MakeSharedProxy>(io);
     }
 
-    tcp_client& on_read(read_callback&& cb) {
+    tcp_client &on_read(read_callback &&cb) {
         opts_.on_read = std::forward<read_callback>(cb);
         return *this;
     }
@@ -55,12 +58,12 @@ public:
         return *this;
     }
 
-    tcp_client& reconnect_interval(std::chrono::milliseconds t) {
+    tcp_client &reconnect_interval(std::chrono::milliseconds t) {
         opts_.reconnect_interval = t;
         return *this;
     }
 
-    tcp_client& connect_timeout(std::chrono::milliseconds t) {
+    tcp_client &connect_timeout(std::chrono::milliseconds t) {
         opts_.connect_timeout = t;
         return *this;
     }
@@ -78,8 +81,8 @@ public:
     }
 
     void stop() {
-        io_.dispatch(
-            [this, wt = WeakCancelToken(token_)]() { if (wt.expired()) return;
+        io_.dispatch([this, wt = WeakCancelToken(token_)]() {
+            if (wt.expired()) return;
             stoped = true;
             token_ = makeCancelToken();
             timer_.cancel();
@@ -88,7 +91,7 @@ public:
         });
     }
 
-    bool is_connected() { return status_ == connected;}
+    bool is_connected() { return status_ == connected; }
 
     void send(const std::string_view &data) {
         if (io_.running_in_this_thread()) {
@@ -116,12 +119,12 @@ private:
           timer_(io.context()),
           opts_(),
           status_(disconnected),
-          stoped(false) {} 
+          stoped(false) {}
 
     void do_connect() {
         status_ = connecting;
         token_ = makeCancelToken();
-        session_ = tcp_session::create(io_);
+        session_ = tcp_connection::create(io_);
         session_->socket().async_connect(
             opts_.endpoint, [this, wt = WeakCancelToken(token_)](auto &ec) {
                 if (wt.expired()) return;
@@ -134,7 +137,7 @@ private:
                 on_status_changed(status_, ec);
             });
         if (opts_.connect_timeout > std::chrono::milliseconds()) {
-            timer_.expires_after(opts_.connect_timeout); 
+            timer_.expires_after(opts_.connect_timeout);
             timer_.async_wait([this, wt = WeakCancelToken(token_)](auto &ec) {
                 if (wt.expired()) return;
                 if (ec == asio::error::operation_aborted) {
@@ -155,7 +158,8 @@ private:
         if (disconnected == s) {
             session_.reset();
             if (opts_.on_disconnected) opts_.on_disconnected(self, ec);
-            if (!stoped && opts_.reconnect_interval > std::chrono::milliseconds())
+            if (!stoped &&
+                opts_.reconnect_interval > std::chrono::milliseconds())
                 reconnect();
         } else if (connected == s) {
             Expects(session_);
@@ -178,7 +182,7 @@ private:
     }
 
     void reconnect() {
-        timer_.expires_after(opts_.reconnect_interval); 
+        timer_.expires_after(opts_.reconnect_interval);
         timer_.async_wait([this, wt = WeakCancelToken(token_)](auto &ec) {
             if (wt.expired()) return;
             if (ec == asio::error::operation_aborted) {
@@ -208,14 +212,13 @@ private:
     };
 
     io_t &io_;
-    tcp_session::ptr session_;
+    tcp_connection::ptr session_;
     SharedCancelToken token_;
     asio::steady_timer timer_;
     options opts_;
     std::atomic_int status_;
     bool stoped;
 };
-}
-
+}  // namespace ijk
 
 #endif /* end of include guard: TCP_CLIENT_HPP_B8QMLVHX */

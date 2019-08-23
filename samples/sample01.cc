@@ -8,7 +8,7 @@
 #include "ijk/base/logging.hpp"
 #include "ijk/network/asio_headers.hpp"
 #include "ijk/network/tcp_acceptor.hpp"
-#include "ijk/network/tcp_session.hpp"
+#include "ijk/network/tcp_connection.hpp"
 
 using namespace ijk;
 
@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     LOG_INFO("server start at {}", ep);
     tcp_acceptor acceptor(pool.get(0), ep, &pool);
     acceptor.start([](auto &&socket, auto &io) {
-        auto sess = tcp_session::create(io, std::move(socket));
+        auto sess = tcp_connection::create(io, std::move(socket));
         sess->on_read([](auto &s, auto &data) {
                 s->send(data);
                 // s->shutdown();

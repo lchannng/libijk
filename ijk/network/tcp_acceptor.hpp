@@ -23,10 +23,14 @@ public:
         std::function<void(asio::ip::tcp::socket &&, io_t &io)>;
 
     tcp_acceptor(io_t &io, const asio::ip::tcp::endpoint &ep,
-                io_context_pool *io_pool = nullptr)
-        : io_(io), io_pool_(io_pool), token_(makeCancelToken()), timer_(io.context()) {
+                 io_context_pool *io_pool = nullptr)
+        : io_(io),
+          io_pool_(io_pool),
+          token_(makeCancelToken()),
+          timer_(io.context()) {
         try {
-            acceptor_ = std::make_unique<asio::ip::tcp::acceptor>(io_.context(), ep, true);
+            acceptor_ = std::make_unique<asio::ip::tcp::acceptor>(io_.context(),
+                                                                  ep, true);
             acceptor_->listen();
         } catch (const std::exception &e) {
             LOG_ERROR("failed to listen: {}, error: {}", ep, e.what());
@@ -54,26 +58,26 @@ public:
     }
 
 private:
-    io_t* next_io() {
-        return &(io_pool_ != nullptr ? io_pool_->get() : io_);
-    }
+    io_t *next_io() { return &(io_pool_ != nullptr ? io_pool_->get() : io_); }
 
     void do_accept() {
         auto io = next_io();
-        acceptor_->async_accept(io->context(), [this, io, wt = WeakCancelToken(token_)](auto &ec, auto socket) {
-            if (wt.expired()) return;
-            if (ec) {
-                LOG_ERROR("accepter error: {}", ec);
-                timer_.expires_after(std::chrono::seconds(3));
-                timer_.async_wait([this, wt](auto &ec) {
-                    if (wt.expired()) return;
-                    do_accept();
-                });
-                return;
-            }
-            accept_cb_(std::move(socket), *io);
-            do_accept();
-        });
+        acceptor_->async_accept(
+            io->context(),
+            [this, io, wt = WeakCancelToken(token_)](auto &ec, auto socket) {
+                if (wt.expired()) return;
+                if (ec) {
+                    LOG_ERROR("accepter error: {}", ec);
+                    timer_.expires_after(std::chrono::seconds(3));
+                    timer_.async_wait([this, wt](auto &ec) {
+                        if (wt.expired()) return;
+                        do_accept();
+                    });
+                    return;
+                }
+                accept_cb_(std::move(socket), *io);
+                do_accept();
+            });
     }
 
 private:
@@ -84,6 +88,6 @@ private:
     asio::steady_timer timer_;
     SharedCancelToken token_;
 };
-}
+}  // namespace ijk
 
 #endif /* end of include guard: TCP_SERVICE_H_PZITAISO */
