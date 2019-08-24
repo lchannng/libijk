@@ -27,7 +27,7 @@ public:
           type_id(t_id),
           inst_id(i_id) {}
 
-    std::string to_string() {
+    std::string to_string() const {
         return fmt::format("{}.{}.{}.{}", channel_id, zone_id, type_id,
                            inst_id);
     }
