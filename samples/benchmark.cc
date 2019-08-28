@@ -110,6 +110,18 @@ int main(int argc, char *argv[])
     t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("unordered map<int,int>: {} ns", (double)t / (double)kCount);
 
+    auto shared = std::make_shared<int>(1);
+    auto weak = std::weak_ptr<int>(shared);
+    sw.start();
+    for (auto i = 0; i < kCount; ++i) {
+        auto s = weak.lock();
+        if (s != nullptr) {
+        
+        }
+    }
+    t = sw.elapsed<ijk::stopwatch::ns>();
+    LOG_INFO("shared_ptr.lock: {} ns", (double)t / (double)kCount);
+
     return 0;
 }
 
