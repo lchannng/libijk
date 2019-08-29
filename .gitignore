@@ -4,3 +4,5 @@ _build*
 Win32
 *.user
 3rd/deps
+.idea
+cmake-build*
