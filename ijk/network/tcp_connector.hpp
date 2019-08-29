@@ -11,7 +11,7 @@
 #include "ijk/base/noncopyable.h"
 #include "ijk/base/gsl.h"
 #include "ijk/network/io_context_pool.hpp"
-#include "ijk/network/tcp_connection.hpp";
+#include "ijk/network/tcp_connection.hpp"
 
 #include <functional>
 #include <memory>

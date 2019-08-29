@@ -15,6 +15,7 @@
 #include "ijk/base/logging.hpp"
 
 #include <cassert>
+#include <list>
 #include <string_view>
 
 namespace ijk {
@@ -136,13 +137,13 @@ private:
     template <typename T>
     struct IsStringType {
         enum {
-            Value = std::is_same<std::decay<T>::type, std::string>::value ||
-                    std::is_same<std::decay<T>::type, std::string_view>::value,
+            Value = std::is_same<typename std::decay<T>::type, std::string>::value ||
+                    std::is_same<typename std::decay<T>::type, std::string_view>::value,
         };
     };
 
-    template <typename T, typename U = std::decay<T>::type,
-              typename std::enable_if<IsStringType<U>::Value>::type * = 0>
+    template <typename T, typename U = typename std::decay<T>::type,
+              typename std::enable_if<IsStringType<U>::Value>::type * = nullptr>
     inline void do_send(T &&data) {
         if (is_closing_or_closed()) return;
 
