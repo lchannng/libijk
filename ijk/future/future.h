@@ -1,734 +1,364 @@
-#ifndef BERT_FUTURE_H
-#define BERT_FUTURE_H
+// Copyright 2019 Age of Minds inc.
 
-#include <atomic>
-#include <functional>
-#include <mutex>
-#include <type_traits>
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
 
-#include "helper.h"
-#include "scheduler.h"
-#include "try.h"
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-namespace ijk {
+#ifndef AOM_VARIADIC_FUTURE_INCLUDED_H
+#define AOM_VARIADIC_FUTURE_INCLUDED_H
 
-namespace internal {
+/// \file
+/// Futures
 
-enum class Progress { None, Timeout, Done };
+#include "ijk/future/config.h"
+#include "ijk/future/impl/storage_decl.h"
 
-using TimeoutCallback = std::function<void()>;
+#include <memory>
+#include <string>
 
-template <typename T>
-struct Core {
-    static_assert(std::is_same<T, void>::value ||
-                      std::is_copy_constructible<T>() ||
-                      std::is_move_constructible<T>(),
-                  "must be copyable or movable or void");
+namespace aom {
 
-    Core() : progress_(Progress::None), retrieved_{false} {}
+template <typename Alloc, typename... Ts>
+class Basic_promise;
 
-    std::mutex thenLock_;
+/**
+ * @brief Values that will be eventually available
+ *
+ * @tparam Ts
+ * fields set to `void` have special rules applied to them.
+ * The following types may not be used:
+ * - `expected<T>`
+ * - `Future<Ts...>`
+ * - `Promise<T>`
+ *
+ * @invariant A Future is in one of two states:
+ * - \b Uninitialized: The only legal operation is to assign another future to
+ * it.
+ * - \b Ready: All operations are legal.
+ */
+template <typename Alloc, typename... Ts>
+class Basic_future {
+  static_assert(sizeof...(Ts) >= 1, "you probably meant Future<void>");
 
-    using ValueType = typename TryWrapper<T>::Type;
-    ValueType value_;
-    std::function<void(ValueType&&)> then_;
-    Progress progress_;
+ public:
+  using promise_type = Basic_promise<Alloc, Ts...>;
 
-    std::function<void(TimeoutCallback&&)> onTimeout_;
-    std::atomic<bool> retrieved_;
+  /// The underlying storage type.
+  using storage_type = detail::Future_storage<Alloc, Ts...>;
 
-    bool IsRoot() const { return !onTimeout_; }
+  /// Allocator
+  using allocator_type = Alloc;
+
+  /// Ts...
+  using value_type = detail::future_value_type_t<Ts...>;
+  using fullfill_type = detail::fullfill_type_t<Ts...>;
+  using finish_type = detail::finish_type_t<Ts...>;
+
+  /**
+   * @brief Construct an \b uninitialized Future
+   *
+   * @post `this` will be \b uninitialized
+   */
+  Basic_future() = default;
+
+  /**
+   * @brief Move constructor
+   *
+   * @param rhs
+   *
+   * @post `rhs` will be \b uninitialized
+   */
+  Basic_future(Basic_future&& rhs) = default;
+
+  /**
+   * @brief Move assignment
+   *
+   * @param rhs
+   * @return Future&
+   *
+   * @post `rhs` will be \b uninitialized
+   */
+  Basic_future& operator=(Basic_future&& rhs) = default;
+
+  /**
+   * @brief Creates a future that is finished by the invocation of cb when this
+   *        is fullfilled.
+   *
+   * @tparam CbT
+   * @param callback
+   * @return Future<decltype(callback(Ts...))> a \ready Future
+   *
+   * @pre the future must be \b ready
+   * @post the future will be \b uninitialized
+   */
+  template <typename CbT>
+  [[nodiscard]] auto then(CbT&& callback);
+
+  /**
+   * @brief Creates a future that is finished by the invocation of cb when this
+   *        is finished.
+   *
+   * @tparam QueueT
+   * @tparam CbT
+   * @param queue
+   * @param callback
+   * @return auto
+   *
+   * @pre the future must be \b ready
+   * @post the future will be \b uninitialized
+   */
+  template <typename QueueT, typename CbT>
+  [[nodiscard]] auto then(QueueT& queue, CbT&& callback);
+
+  /**
+   * @brief Creates a future that is finished by the invocation of cb when this
+   *        is finished.
+   *
+   * @tparam CbT
+   * @param callback
+   * @return auto
+   *
+   * @pre the future must be \b ready
+   * @post the future will be \b uninitialized
+   */
+  template <typename CbT>
+  [[nodiscard]] auto then_expect(CbT&& callback);
+
+  /**
+   * @brief Creates a future that is finished by the invocation of cb from
+   *        queue when this is finished.
+   *
+   * @tparam QueueT
+   * @tparam CbT
+   * @param queue
+   * @param callback
+   * @return auto
+   *
+   * @pre the future must be \b ready
+   * @post the future will be \b uninitialized
+   */
+  template <typename QueueT, typename CbT>
+  [[nodiscard]] auto then_expect(QueueT& queue, CbT&& callback);
+
+  /**
+   * @brief Invokes cb when this is finished.
+   *
+   * @tparam CbT
+   * @param callback
+   *
+   * @pre the future must be \b ready
+   * @post the future will be \b uninitialized
+   */
+  template <typename CbT>
+  void finally(CbT&& callback);
+
+  /**
+   * @brief Invokes cb from queue when this is finished.
+   *
+   * @tparam QueueT
+   * @tparam CbT
+   * @param queue
+   * @param callback
+   *
+   * @pre the future must be \b ready
+   * @post the future will be \b uninitialized
+   */
+  template <typename QueueT, typename CbT>
+  void finally(QueueT& queue, CbT&& callback);
+
+  /**
+   * @brief Blocks until the future is finished, and then either return the
+   *        value, or throw the error
+   *
+   * @return auto
+   *
+   * @pre the future must be \b ready
+   * @post the future will be \b uninitialized
+   */
+  value_type get();
+
+  /**
+   * @brief Obtain a std::future bound to this future.
+   *
+   * @return auto
+   */
+  auto std_future();
+
+  /**
+   * @brief Get the allocator associated with this future.
+   *
+   * @pre The future must have shared storage associated with it.
+   *
+   * @return Alloc&
+   */
+  allocator_type& allocator();
+
+  /**
+   * @brief Create a future directly from its underlying storage.
+   */
+  explicit Basic_future(detail::Storage_ptr<storage_type> s);
+
+ private:
+  detail::Storage_ptr<storage_type> storage_;
 };
 
-}  // end namespace internal
+template <typename... Ts>
+using Future = Basic_future<std::allocator<void>, Ts...>;
 
-template <typename T>
-class Future;
-
-using namespace internal;
-
-template <typename T>
-class Promise {
-public:
-    Promise() : core_(std::make_shared<Core<T>>()) {}
-
-    // TODO: C++11 lambda doesn't support move capture
-    // just for compile, copy Promise is ub, do NOT do that!
-    Promise(const Promise&) = default;
-    Promise& operator=(const Promise&) = default;
-
-    Promise(Promise&& pm) = default;
-    Promise& operator=(Promise&& pm) = default;
-
-    void SetException(std::exception_ptr exp) {
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = typename Core<T>::ValueType(std::move(exp));
-        guard.unlock();
-
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    template <typename SHIT = T>
-    typename std::enable_if<!std::is_void<SHIT>::value, void>::type SetValue(
-        SHIT&& t) {
-        // if ThenImp is running, here will wait for the lock.
-        // ThenImp will release lock after set then_ callback.
-        // And this func acquired lock, definitely call then_.
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = std::forward<SHIT>(t);
-
-        guard.unlock();
-        // when here, the state is defined, so mutex is useless
-        // If the ThenImp function run, it'll see the Done state
-        // and call func there, not use then_ callback.
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    template <typename SHIT = T>
-    typename std::enable_if<!std::is_void<SHIT>::value, void>::type SetValue(
-        const SHIT& t) {
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = t;
-
-        guard.unlock();
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    template <typename SHIT = T>
-    typename std::enable_if<!std::is_void<SHIT>::value, void>::type SetValue(
-        Try<SHIT>&& t) {
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = std::forward<Try<SHIT>>(t);
-
-        guard.unlock();
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    template <typename SHIT = T>
-    typename std::enable_if<!std::is_void<SHIT>::value, void>::type SetValue(
-        const Try<SHIT>& t) {
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = t;
-
-        guard.unlock();
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    template <typename SHIT = T>
-    typename std::enable_if<std::is_void<SHIT>::value, void>::type SetValue(
-        Try<void>&& t) {
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = std::forward<Try<void>>(t);
-
-        guard.unlock();
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    template <typename SHIT = T>
-    typename std::enable_if<std::is_void<SHIT>::value, void>::type SetValue(
-        const Try<void>& t) {
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = t;  // Try<void>();
-
-        guard.unlock();
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    template <typename SHIT = T>
-    typename std::enable_if<std::is_void<SHIT>::value, void>::type SetValue() {
-        std::unique_lock<std::mutex> guard(core_->thenLock_);
-        bool isRoot = core_->IsRoot();
-        if (isRoot && core_->progress_ != Progress::None) return;
-
-        core_->progress_ = Progress::Done;
-        core_->value_ = Try<void>();
-
-        guard.unlock();
-        if (core_->then_) core_->then_(std::move(core_->value_));
-    }
-
-    Future<T> GetFuture() {
-        bool expect = false;
-        if (!core_->retrieved_.compare_exchange_strong(expect, true)) {
-            throw std::runtime_error("Future already retrieved");
-        }
-
-        return Future<T>(core_);
-    }
-
-    bool IsReady() const { return core_->progress_ != Progress::None; }
-
-private:
-    std::shared_ptr<Core<T>> core_;
+/**
+ * @brief Error assigned to a future who's promise is destroyed before being
+ *        finished.
+ *
+ */
+struct Unfullfilled_promise : public std::logic_error {
+  Unfullfilled_promise() : std::logic_error("Unfullfilled_promise") {}
 };
 
-template <typename T2>
-Future<T2> MakeExceptionFuture(std::exception_ptr&&);
+/**
+ * @brief Landing for a value that finishes a Future.
+ *
+ * @tparam Ts
+ */
+template <typename Alloc, typename... Ts>
+class Basic_promise {
+  static_assert(sizeof...(Ts) >= 1, "you probably meant Promise<void>");
 
-template <typename T>
-class Future {
-public:
-    using InnerType = T;
+ public:
+  using future_type = Basic_future<Alloc, Ts...>;
+  using storage_type = typename future_type::storage_type;
 
-    template <typename U>
-    friend class Future;
+  using value_type = detail::future_value_type_t<Ts...>;
 
-    Future() = default;
+  using fullfill_type = detail::fullfill_type_t<Ts...>;
+  using finish_type = detail::finish_type_t<Ts...>;
+  using fail_type = detail::fail_type_t<Ts...>;
 
-    Future(const Future&) = delete;
-    void operator=(const Future&) = delete;
+  Basic_promise(const Alloc& alloc = Alloc());
+  Basic_promise(Basic_promise&&) = default;
+  Basic_promise& operator=(Basic_promise&&) = default;
+  ~Basic_promise();
 
-    Future(Future&& fut) = default;
-    Future& operator=(Future&& fut) = default;
+  /**
+   * @brief Get the future object
+   *
+   * @param alloc The allocator to use when creating the interal state
+   * @return future_type
+   */
+  future_type get_future();
 
-    explicit Future(std::shared_ptr<Core<T>> state)
-        : state_(std::move(state)) {}
+  /**
+   * @brief Fullfills the promise
+   *
+   * @tparam Us
+   * @param values
+   */
+  template <typename... Us>
+  void set_value(Us&&... values);
 
-    // T is of type Future<InnerType>
-    template <typename SHIT = T>
-    typename std::enable_if<IsFuture<SHIT>::value, SHIT>::type Unwrap() {
-        using InnerType = typename IsFuture<SHIT>::Inner;
+  /**
+   * @brief Finishes the promise
+   *
+   * @tparam Us
+   * @param expecteds
+   */
+  template <typename... Us>
+  void finish(Us&&... expecteds);
 
-        static_assert(std::is_same<SHIT, Future<InnerType>>::value,
-                      "Kidding me?");
+  /**
+   * @brief Fails the promise
+   *
+   * @param error
+   */
+  void set_exception(fail_type error);
 
-        Promise<InnerType> prom;
-        Future<InnerType> fut = prom.GetFuture();
+  /**
+   * @brief returns wether the promise still refers to an uncompleted future
+   *
+   * @return true
+   * @return false
+   */
+  operator bool() const;
 
-        std::unique_lock<std::mutex> guard(state_->thenLock_);
-        if (state_->progress_ == Progress::Timeout) {
-            throw std::runtime_error("Wrong state : Timeout");
-        } else if (state_->progress_ == Progress::Done) {
-            try {
-                auto innerFuture = std::move(state_->value_);
-                return std::move(innerFuture.Value());
-            } catch (const std::exception& e) {
-                return MakeExceptionFuture<InnerType>(std::current_exception());
-            }
-        } else {
-            SetCallback([pm = std::move(prom)](typename TryWrapper<SHIT>::Type&&
-                                                   innerFuture) mutable {
-                try {
-                    SHIT future = std::move(innerFuture);
-                    future.SetCallback(
-                        [pm = std::move(pm)](
-                            typename TryWrapper<InnerType>::Type&& t) mutable {
-                            // No need scheduler here, think about this code:
-                            // `outer.Unwrap().Then(sched, func);`
-                            // outer.Unwrap() is the inner future, the below
-                            // line will trigger func in sched thread.
-                            pm.SetValue(std::move(t));
-                        });
-                } catch (...) {
-                    pm.SetException(std::current_exception());
-                }
-            });
-        }
+ private:
+  bool future_created_ = false;
+  bool value_assigned_ = false;
 
-        return fut;
-    }
+  detail::Storage_ptr<storage_type> storage_;
 
-    template <typename F, typename R = CallableResult<F, T>>
-    auto Then(F&& f) -> typename R::ReturnFutureType {
-        typedef typename R::Arg Arguments;
-        return _ThenImpl<F, R>(nullptr, std::forward<F>(f), Arguments());
-    }
-
-    template <typename F>
-    Future<T> Ensure(F&& func) {
-        auto f = [funcw = std::forward<F>(func)](Try<T>&& t) {
-            std::move(funcw)();
-            Promise<T> pm;
-            auto fut = pm.GetFuture();
-            pm.SetValue(std::move(t));
-            return fut;
-        };
-        return this->Then(std::move(f));
-    }
-
-    template <typename F>
-    Future<T> OnError(F&& func) {
-        static_assert(CanCallWith<F, std::exception_ptr>::value,
-                      "OnError func must be called with std::exception_ptr");
-        auto f = [funcw = std::forward<F>(func)](Try<T>&& t) {
-            if (t.HasException()) {
-                std::move(funcw)(t.Exception());
-            }
-            Promise<T> pm;
-            auto fut = pm.GetFuture();
-            pm.SetValue(std::move(t));
-            return fut;
-        };
-        return this->Then(std::move(f));
-    }
-
-    // f will be called in sched
-    template <typename F, typename R = CallableResult<F, T>>
-    auto Then(Scheduler* sched, F&& f) -> typename R::ReturnFutureType {
-        typedef typename R::Arg Arguments;
-        return _ThenImpl<F, R>(sched, std::forward<F>(f), Arguments());
-    }
-
-    // 1. F does not return future type
-    template <typename F, typename R, typename... Args>
-    typename std::enable_if<!R::IsReturnsFuture::value,
-                            typename R::ReturnFutureType>::type
-    _ThenImpl(Scheduler* sched, F&& f, ResultOfWrapper<F, Args...>) {
-        // static_assert(std::is_void<T>::value ? sizeof...(Args) == 0 :
-        // sizeof...(Args) == 1, "Then callback must take 0/1 argument");
-        static_assert(sizeof...(Args) <= 1, "Then must take zero/one argument");
-
-        using FReturnType = typename R::IsReturnsFuture::Inner;
-
-        Promise<FReturnType> pm;
-        auto nextFuture = pm.GetFuture();
-
-        // FIXME
-        using FuncType = typename std::decay<F>::type;
-
-        std::unique_lock<std::mutex> guard(state_->thenLock_);
-        if (state_->progress_ == Progress::Timeout) {
-            throw std::runtime_error("Wrong state : Timeout");
-        } else if (state_->progress_ == Progress::Done) {
-            typename TryWrapper<T>::Type t;
-            try {
-                t = std::move(state_->value_);
-            } catch (const std::exception& e) {
-                (void)e;
-                t = (typename TryWrapper<T>::Type)(std::current_exception());
-            }
-
-            guard.unlock();
-
-            auto func = [res = std::move(t), f = std::forward<FuncType>(f),
-                         prom = std::move(pm)]() mutable {
-                auto result = WrapWithTry(f, std::move(res));
-                prom.SetValue(std::move(result));
-            };
-
-            if (sched)
-                sched->Schedule(std::move(func));
-            else
-                func();
-        } else {
-            // 1. set pm's timeout callback
-            nextFuture.SetOnTimeout([weak_parent = std::weak_ptr<Core<T>>(
-                                         state_)](TimeoutCallback&& cb) {
-                auto parent = weak_parent.lock();
-                if (!parent) return;
-
-                {
-                    std::unique_lock<std::mutex> guard(parent->thenLock_);
-                    // if parent future is Done, let it go down
-                    if (parent->progress_ != Progress::None) return;
-
-                    parent->progress_ = Progress::Timeout;
-                }
-
-                if (!parent->IsRoot())
-                    parent->onTimeout_(std::move(cb));  // propogate to the root
-                else
-                    cb();
-            });
-
-            // 2. set this future's then callback
-            SetCallback(
-                [sched, func = std::forward<FuncType>(f), prom = std::move(pm)](
-                    typename TryWrapper<T>::Type&& t) mutable {
-                    auto cb = [func = std::move(func), t = std::move(t),
-                               prom = std::move(prom)]() mutable {
-                        // run callback, T can be void, thanks to folly Try<>
-                        auto result = WrapWithTry(func, std::move(t));
-                        // set next future's result
-                        prom.SetValue(std::move(result));
-                    };
-
-                    if (sched)
-                        sched->Schedule(std::move(cb));
-                    else
-                        cb();
-                });
-        }
-
-        return std::move(nextFuture);
-    }
-
-    // 2. F return another future type
-    template <typename F, typename R, typename... Args>
-    typename std::enable_if<R::IsReturnsFuture::value,
-                            typename R::ReturnFutureType>::type
-    _ThenImpl(Scheduler* sched, F&& f, ResultOfWrapper<F, Args...>) {
-        static_assert(sizeof...(Args) <= 1, "Then must take zero/one argument");
-
-        using FReturnType = typename R::IsReturnsFuture::Inner;
-
-        Promise<FReturnType> pm;
-        auto nextFuture = pm.GetFuture();
-
-        // FIXME
-        using FuncType = typename std::decay<F>::type;
-
-        std::unique_lock<std::mutex> guard(state_->thenLock_);
-        if (state_->progress_ == Progress::Timeout) {
-            throw std::runtime_error("Wrong state : should be Timeout");
-        } else if (state_->progress_ == Progress::Done) {
-            typename TryWrapper<T>::Type t;
-            try {
-                t = std::move(state_->value_);
-            } catch (const std::exception& e) {
-                (void)e;
-                t = decltype(t)(std::current_exception());
-            }
-
-            guard.unlock();
-
-            auto cb = [res = std::move(t), f = std::forward<FuncType>(f),
-                       prom = std::move(pm)]() mutable {
-                // because func return another future: innerFuture, when
-                // innerFuture is done, nextFuture can be done
-                decltype(f(res.template Get<Args>()...)) innerFuture;
-                if (res.HasException()) {
-                    // FIXME if Args... is void
-                    innerFuture = f(typename TryWrapper<typename std::decay<
-                                        Args...>::type>::Type(res.Exception()));
-                } else {
-                    innerFuture = f(res.template Get<Args>()...);
-                }
-
-                std::unique_lock<std::mutex> guard(
-                    innerFuture.state_->thenLock_);
-                if (innerFuture.state_->progress_ == Progress::Timeout) {
-                    throw std::runtime_error("Wrong state : Timeout");
-                } else if (innerFuture.state_->progress_ == Progress::Done) {
-                    typename TryWrapper<FReturnType>::Type t;
-                    try {
-                        t = std::move(innerFuture.state_->value_);
-                    } catch (const std::exception& e) {
-                        (void)e;
-                        t = decltype(t)(std::current_exception());
-                    }
-
-                    guard.unlock();
-                    prom.SetValue(std::move(t));
-                } else {
-                    innerFuture.SetCallback(
-                        [prom = std::move(prom)](
-                            typename TryWrapper<FReturnType>::Type&&
-                                t) mutable { prom.SetValue(std::move(t)); });
-                }
-            };
-
-            if (sched)
-                sched->Schedule(std::move(cb));
-            else
-                cb();
-        } else {
-            // 1. set pm's timeout callback
-            nextFuture.SetOnTimeout([weak_parent = std::weak_ptr<Core<T>>(
-                                         state_)](TimeoutCallback&& cb) {
-                auto parent = weak_parent.lock();
-                if (!parent) return;
-
-                {
-                    std::unique_lock<std::mutex> guard(parent->thenLock_);
-                    if (parent->progress_ != Progress::None) return;
-
-                    parent->progress_ = Progress::Timeout;
-                }
-
-                if (!parent->IsRoot())
-                    parent->onTimeout_(std::move(cb));  // propogate to the root
-                else
-                    cb();
-            });
-
-            // 2. set this future's then callback
-            SetCallback([sched = sched, func = std::forward<FuncType>(f),
-                         prom = std::move(pm)](
-                            typename TryWrapper<T>::Type&& t) mutable {
-                auto cb = [func = std::move(func), t = std::move(t),
-                           prom = std::move(prom)]() mutable {
-                    // because func return another future: innerFuture, when
-                    // innerFuture is done, nextFuture can be done
-                    decltype(func(t.template Get<Args>()...)) innerFuture;
-                    if (t.HasException()) {
-                        // FIXME if Args... is void
-                        innerFuture =
-                            func(typename TryWrapper<typename std::decay<
-                                     Args...>::type>::Type(t.Exception()));
-                    } else {
-                        innerFuture = func(t.template Get<Args>()...);
-                    }
-
-                    std::unique_lock<std::mutex> guard(
-                        innerFuture.state_->thenLock_);
-                    if (innerFuture.state_->progress_ == Progress::Timeout) {
-                        struct FutureWrongState {};
-                        throw FutureWrongState();
-                    } else if (innerFuture.state_->progress_ ==
-                               Progress::Done) {
-                        typename TryWrapper<FReturnType>::Type ret;
-                        try {
-                            ret = std::move(innerFuture.state_->value_);
-                        } catch (const std::exception& e) {
-                            (void)e;
-                            ret = decltype(ret)(std::current_exception());
-                        }
-
-                        guard.unlock();
-                        prom.SetValue(std::move(ret));
-                    } else {
-                        innerFuture.SetCallback(
-                            [prom = std::move(prom)](
-                                typename TryWrapper<FReturnType>::Type&&
-                                    t) mutable {
-                                prom.SetValue(std::move(t));
-                            });
-                    }
-                };
-
-                if (sched)
-                    sched->Schedule(std::move(cb));
-                else
-                    cb();
-            });
-        }
-
-        return std::move(nextFuture);
-    }
-
-    void SetCallback(
-        std::function<void(typename TryWrapper<T>::Type&&)>&& func) {
-        state_->then_ = std::move(func);
-    }
-
-    /*
-     * When register callbacks and timeout for a future like this:
-     *
-     *      Future<int> f;
-     *      f.Then(xx).Then(yy).OnTimeout(zz);
-     *
-     * There will be 3 future objects created except f, we call f as root
-     * future. The zz callback is registed on the last future, however, timeout
-     * and future satisfication can happened almost in the same time, we should
-     * ensure that both xx and yy will be called or zz will be called, but they
-     * can't happened both or neither. So we pass the cb to the root future, if
-     * we find out that root future is indeed timeout, we call cb there.
-     */
-    void OnTimeout(std::chrono::milliseconds duration, TimeoutCallback f,
-                   Scheduler* scheduler) {
-        scheduler->ScheduleAfter(
-            duration, [state = state_, cb = std::move(f)]() mutable {
-                {
-                    std::unique_lock<std::mutex> guard(state->thenLock_);
-
-                    if (state->progress_ != Progress::None) return;
-
-                    state->progress_ = Progress::Timeout;
-                }
-
-                if (!state->IsRoot())
-                    state->onTimeout_(
-                        std::move(cb));  // propogate to the root future
-                else
-                    cb();
-            });
-    }
-
-private:
-    void SetOnTimeout(std::function<void(TimeoutCallback&&)>&& func) {
-        state_->onTimeout_ = std::move(func);
-    }
-
-private:
-    std::shared_ptr<Core<T>> state_;
+  Basic_promise(const Basic_promise&) = delete;
+  Basic_promise& operator=(const Basic_promise&) = delete;
 };
 
-// Make ready future
-template <typename T2>
-inline Future<typename std::decay<T2>::type> MakeReadyFuture(T2&& value) {
-    Promise<typename std::decay<T2>::type> pm;
-    auto f(pm.GetFuture());
-    pm.SetValue(std::forward<T2>(value));
+template <typename... Ts>
+using Promise = Basic_promise<std::allocator<void>, Ts...>;
+/**
+ * @brief Ties a set of Future<> into a single Future<> that is finished once
+ *        all child futures are finished.
+ *
+ * @tparam FutTs
+ * @param futures
+ * @return auto
+ */
+template <typename... FutTs>
+auto join(FutTs&&... futures);
 
-    return f;
-}
+// Convenience function that creates a promise for the result of the cb, pushes
+// cb in q, and returns a future to that promise.
 
-inline Future<void> MakeReadyFuture() {
-    Promise<void> pm;
-    auto f(pm.GetFuture());
-    pm.SetValue();
+/**
+ * @brief Posts a callback into to queue, and return a future that will be
+ *        finished upon executaiton of the callback.
+ *
+ * @tparam QueueT
+ * @tparam CbT
+ * @param q
+ * @param callback
+ * @return auto
+ */
+template <typename QueueT, typename CbT>
+auto async(QueueT& q, CbT&& callback);
 
-    return f;
-}
+/**
+ * @brief Create a higher-order Future from a `future<tuple>`
+ *
+ * @param rhs
+ *
+ * @post `rhs` will be \b uninitialized.
+ * @post this will inherit the state `rhs` was in.
+ */
+template <typename Alloc, typename... Ts>
+Basic_future<Alloc, Ts...> flatten(Basic_future<Alloc, std::tuple<Ts...>>& rhs);
 
-// Make exception future
-template <typename T2, typename E>
-inline Future<T2> MakeExceptionFuture(E&& exp) {
-    Promise<T2> pm;
-    pm.SetException(std::make_exception_ptr(std::forward<E>(exp)));
+/**
+ * @brief Used to let a callback return a higher-order future.
+ *
+ * @tparam Ts
+ * @param args
+ * @return auto
+ */
+template <typename... Ts>
+auto segmented(Ts&&... args);
 
-    return pm.GetFuture();
-}
+/**
+ * @brief Obtains the current version of the library.
+ *
+ * @return std::string
+ */
+inline std::string varfut_lib_version_string();
+}  // namespace aom
 
-template <typename T2>
-inline Future<T2> MakeExceptionFuture(std::exception_ptr&& eptr) {
-    Promise<T2> pm;
-    pm.SetException(std::move(eptr));
-
-    return pm.GetFuture();
-}
-
-// When All
-template <typename... FT>
-typename CollectAllVariadicContext<
-    typename std::decay<FT>::type::InnerType...>::FutureType
-WhenAll(FT&&... futures) {
-    auto ctx = std::make_shared<CollectAllVariadicContext<
-        typename std::decay<FT>::type::InnerType...>>();
-
-    CollectVariadicHelper<CollectAllVariadicContext>(
-        ctx, std::forward<typename std::decay<FT>::type>(futures)...);
-
-    return ctx->pm.GetFuture();
-}
-
-template <class InputIterator>
-Future<std::vector<
-    Try<typename std::iterator_traits<InputIterator>::value_type::InnerType>>>
-WhenAll(InputIterator first, InputIterator last) {
-    using T =
-        typename std::iterator_traits<InputIterator>::value_type::InnerType;
-    if (first == last) return MakeReadyFuture(std::vector<Try<T>>());
-
-    struct CollectAllContext {
-        CollectAllContext(int n) : results(n) {}
-        ~CollectAllContext() {
-            // I think this line is useless.
-            // pm.SetValue(std::move(results));
-        }
-
-        Promise<std::vector<Try<T>>> pm;
-        std::vector<Try<T>> results;
-        std::atomic<size_t> collected{0};
-    };
-
-    auto ctx = std::make_shared<CollectAllContext>(std::distance(first, last));
-
-    for (size_t i = 0; first != last; ++first, ++i) {
-        first->SetCallback([ctx, i](Try<T>&& t) {
-            ctx->results[i] = std::move(t);
-            if (ctx->results.size() - 1 ==
-                std::atomic_fetch_add(&ctx->collected, std::size_t(1))) {
-                ctx->pm.SetValue(std::move(ctx->results));
-            }
-        });
-    }
-
-    return ctx->pm.GetFuture();
-}
-
-// When Any
-template <class InputIterator>
-Future<std::pair<size_t, Try<typename std::iterator_traits<
-                             InputIterator>::value_type::InnerType>>>
-WhenAny(InputIterator first, InputIterator last) {
-    using T =
-        typename std::iterator_traits<InputIterator>::value_type::InnerType;
-
-    if (first == last) {
-        return MakeReadyFuture(std::make_pair(size_t(0), Try<T>(T())));
-    }
-
-    struct CollectAnyContext {
-        CollectAnyContext(){};
-        Promise<std::pair<size_t, Try<T>>> pm;
-        std::atomic<bool> done{false};
-    };
-
-    auto ctx = std::make_shared<CollectAnyContext>();
-    for (size_t i = 0; first != last; ++first, ++i) {
-        first->SetCallback([ctx, i](Try<T>&& t) {
-            if (!ctx->done.exchange(true)) {
-                ctx->pm.SetValue(std::make_pair(i, std::move(t)));
-            }
-        });
-    }
-
-    return ctx->pm.GetFuture();
-}
-
-// When N
-template <class InputIterator>
-Future<std::vector<std::pair<
-    size_t,
-    Try<typename std::iterator_traits<InputIterator>::value_type::InnerType>>>>
-WhenN(size_t N, InputIterator first, InputIterator last) {
-    using T =
-        typename std::iterator_traits<InputIterator>::value_type::InnerType;
-
-    size_t nFutures = std::distance(first, last);
-    const size_t needCollect = std::min(nFutures, N);
-
-    if (needCollect == 0) {
-        return MakeReadyFuture(std::vector<std::pair<size_t, Try<T>>>());
-    }
-
-    struct CollectNContext {
-        CollectNContext(size_t _needs) : needs(_needs) {}
-        Promise<std::vector<std::pair<size_t, Try<T>>>> pm;
-
-        std::mutex mutex;
-        std::vector<std::pair<size_t, Try<T>>> results;
-        const size_t needs;
-        bool done{false};
-    };
-
-    auto ctx = std::make_shared<CollectNContext>(needCollect);
-    for (size_t i = 0; first != last; ++first, ++i) {
-        first->SetCallback([ctx, i](Try<T>&& t) {
-            std::unique_lock<std::mutex> guard(ctx->mutex);
-            if (ctx->done) return;
-
-            ctx->results.push_back(std::make_pair(i, std::move(t)));
-            if (ctx->needs == ctx->results.size()) {
-                ctx->done = true;
-                ctx->pm.SetValue(std::move(ctx->results));
-            }
-        });
-    }
-
-    return ctx->pm.GetFuture();
-}
-
-}  // namespace ijk
+#include "ijk/future/impl/async.h"
+#include "ijk/future/impl/future.h"
+#include "ijk/future/impl/join.h"
+#include "ijk/future/impl/promise.h"
+#include "ijk/future/impl/storage_impl.h"
 
 #endif
