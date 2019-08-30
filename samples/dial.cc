@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         }
     });
 #else
-    ijk::dial(io, "127.0.0.1", 4000).finally([](expected<tcp_connection::ptr> res) {
+    ijk::dial(io, "localhost", 4000).finally([](expected<tcp_connection::ptr> res) {
         if (res.has_value()) {
             LOG_INFO("connected to server");
         } else {
