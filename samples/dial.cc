@@ -29,17 +29,19 @@ int main(int argc, char *argv[]) {
         }
     });
 #else
-    ijk::dial(io, "localhost", 4000).finally([](expected<tcp_connection::ptr> res) {
-        if (res.has_value()) {
-            LOG_INFO("connected to server");
-        } else {
-            try {
-                std::rethrow_exception(res.error());
-            } catch (const asio::system_error &e) {
-                LOG_ERROR("connect failed with error: {}", e.code());
+    ijk::dial(io, "localhost", 4000)
+        .finally([](expected<tcp_connection::ptr> res) {
+            if (res.has_value()) {
+                LOG_INFO("connected to server");
+                res.value()->send("1111");
+            } else {
+                try {
+                    std::rethrow_exception(res.error());
+                } catch (const asio::system_error &e) {
+                    LOG_ERROR("connect failed with error: {}", e.code());
+                }
             }
-        }
-    });
+        });
 
 #endif
 

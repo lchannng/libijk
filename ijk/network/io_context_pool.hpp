@@ -52,6 +52,11 @@ public:
         asio::post(context_, std::forward<T>(func));
     }
 
+    template <typename T>
+    inline void push(T &&func) {
+        asio::post(context_, std::forward<T>(func));
+    }
+
 private:
     asio::io_context context_;
     std::thread::id owner_;

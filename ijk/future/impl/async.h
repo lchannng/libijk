@@ -33,7 +33,7 @@ auto async(QueueT& q, CbT&& cb) {
     try {
       if constexpr (std::is_same_v<void, cb_result_type>) {
         cb();
-        res->fullfill();
+        res->fullfill(dst_storage_type::fullfill_type());
       } else {
         res->fullfill(cb());
       }

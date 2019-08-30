@@ -10,4 +10,5 @@ add_sample(sample02 ${SAMPLES_ROOT}/sample02.cc)
 add_sample(benchmark ${SAMPLES_ROOT}/benchmark.cc)
 add_sample(future ${SAMPLES_ROOT}/future.cc)
 add_sample(dial ${SAMPLES_ROOT}/dial.cc)
+add_sample(delay ${SAMPLES_ROOT}/delay.cc)
 
