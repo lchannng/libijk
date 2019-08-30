@@ -9,4 +9,5 @@ add_sample(sample01 ${SAMPLES_ROOT}/sample01.cc)
 add_sample(sample02 ${SAMPLES_ROOT}/sample02.cc)
 add_sample(benchmark ${SAMPLES_ROOT}/benchmark.cc)
 add_sample(future ${SAMPLES_ROOT}/future.cc)
+add_sample(dial ${SAMPLES_ROOT}/dial.cc)
 

@@ -6,7 +6,6 @@
  */
 
 #include "ijk/base/logging.hpp"
-#include "ijk/network/asio_headers.hpp"
 #include "ijk/network/tcp_acceptor.hpp"
 #include "ijk/network/tcp_connection.hpp"
 

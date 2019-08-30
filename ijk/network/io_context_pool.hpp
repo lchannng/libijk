@@ -14,9 +14,8 @@
 #include <type_traits>
 #include <vector>
 
-#include "asio_headers.hpp"
-
 #include "ijk/base/noncopyable.h"
+#include "ijk/network/asio_compatibility.hpp"
 
 namespace ijk {
 class io_t final : private noncopyable {
