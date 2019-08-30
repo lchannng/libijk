@@ -12,25 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/// \file
-/// Configuration
+#include "ijk/future/future.h"
 
-#ifndef AOM_VARIADIC_FUTURE_CONFIG_INCLUDED_H
-#define AOM_VARIADIC_FUTURE_CONFIG_INCLUDED_H
+#include <catch2/catch.hpp>
 
-#define AOM_VARFUT_VERSION_MAJOR 0
-#define AOM_VARFUT_VERSION_MINOR 3
-#define AOM_VARFUT_VERSION_PATCH 2
+#include <iostream>
+#include <queue>
 
-// **************************** std::expected ***************************//
+using namespace ijk;
 
-// Change this if you want to use some other expected type.
-#include "impl/expected.hpp"
+TEST_CASE("async function") {
+    std::queue<std::function<void()>> queue;
 
-namespace ijk {
-template <typename T>
-using expected = nonstd::expected<T, std::exception_ptr>;
-using unexpected = nonstd::unexpected_type<std::exception_ptr>;
-}  // namespace aom
+    auto fut = async(queue, []() { return 12; });
 
-#endif
+    REQUIRE(1 == queue.size());
+    int dst = 0;
+    fut.finally([&](expected<int> x) { dst = x.value(); });
+    REQUIRE(0 == dst);
+
+    queue.front()();
+    queue.pop();
+
+    REQUIRE(12 == dst);
+}

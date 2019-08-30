@@ -19,7 +19,7 @@
 
 #include "ijk/future/impl/storage_decl.h"
 
-namespace aom {
+namespace ijk {
 
 namespace detail {
 

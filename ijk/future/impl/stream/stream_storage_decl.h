@@ -17,7 +17,7 @@
 
 #include "ijk/future/config.h"
 
-namespace aom {
+namespace ijk {
 
 namespace detail {
 

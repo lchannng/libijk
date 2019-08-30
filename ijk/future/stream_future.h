@@ -26,7 +26,7 @@
 
 #include <memory>
 
-namespace aom {
+namespace ijk {
 
 template <typename Alloc, typename... Ts>
 class Basic_stream_promise;
@@ -193,7 +193,7 @@ class Basic_stream_promise {
  * @tparam Ts
  */
 template <typename... Ts>
-using Stream_promise = Basic_stream_promise<std::allocator<void>, Ts...>;
+using stream_promise = Basic_stream_promise<std::allocator<void>, Ts...>;
 }  // namespace aom
 
 #include "ijk/future/impl/stream/stream_future.h"

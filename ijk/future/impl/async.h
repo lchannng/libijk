@@ -17,7 +17,7 @@
 
 #include "ijk/future/config.h"
 
-namespace aom {
+namespace ijk {
 template <typename QueueT, typename CbT>
 auto async(QueueT& q, CbT&& cb) {
   using cb_result_type = decltype(cb());

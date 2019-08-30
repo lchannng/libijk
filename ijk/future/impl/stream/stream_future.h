@@ -21,7 +21,7 @@
 
 #include <future>
 
-namespace aom {
+namespace ijk {
 
 template <typename Alloc, typename... Ts>
 Basic_stream_future<Alloc, Ts...>::Basic_stream_future(

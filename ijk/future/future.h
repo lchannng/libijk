@@ -24,7 +24,7 @@
 #include <memory>
 #include <string>
 
-namespace aom {
+namespace ijk {
 
 template <typename Alloc, typename... Ts>
 class Basic_promise;
@@ -211,7 +211,7 @@ class Basic_future {
 };
 
 template <typename... Ts>
-using Future = Basic_future<std::allocator<void>, Ts...>;
+using future = Basic_future<std::allocator<void>, Ts...>;
 
 /**
  * @brief Error assigned to a future who's promise is destroyed before being
@@ -298,7 +298,7 @@ class Basic_promise {
 };
 
 template <typename... Ts>
-using Promise = Basic_promise<std::allocator<void>, Ts...>;
+using promise = Basic_promise<std::allocator<void>, Ts...>;
 /**
  * @brief Ties a set of Future<> into a single Future<> that is finished once
  *        all child futures are finished.

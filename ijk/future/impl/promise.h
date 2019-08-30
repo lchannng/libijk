@@ -17,7 +17,7 @@
 
 #include "ijk/future/config.h"
 
-namespace aom {
+namespace ijk {
 
 template <typename Alloc, typename... Ts>
 Basic_promise<Alloc, Ts...>::Basic_promise(const Alloc& alloc) {

@@ -22,7 +22,7 @@
 #include <atomic>
 #include <type_traits>
 
-namespace aom {
+namespace ijk {
 
 namespace detail {
 

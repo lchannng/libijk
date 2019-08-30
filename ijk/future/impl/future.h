@@ -23,7 +23,7 @@
 
 #include <future>
 
-namespace aom {
+namespace ijk {
 
 template <typename Alloc, typename... Ts>
 Basic_future<Alloc, Ts...>::Basic_future(detail::Storage_ptr<storage_type> s)

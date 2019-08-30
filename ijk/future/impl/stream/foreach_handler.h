@@ -20,7 +20,7 @@
 #include "ijk/future/impl/stream/stream_storage_decl.h"
 #include "ijk/future/impl/utils.h"
 
-namespace aom {
+namespace ijk {
 
 namespace detail {
 

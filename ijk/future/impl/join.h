@@ -19,7 +19,7 @@
 
 #include "ijk/future/impl/utils.h"
 
-namespace aom {
+namespace ijk {
 
 namespace detail {
 
