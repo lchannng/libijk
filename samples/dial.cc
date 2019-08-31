@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
         .finally([](expected<tcp_connection::ptr> res) {
             if (res.has_value()) {
                 LOG_INFO("connected to server");
-                res.value()->send("1111");
+                res.value()->send(std::string("1111"));
             } else {
                 try {
                     std::rethrow_exception(res.error());
