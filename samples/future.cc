@@ -13,17 +13,29 @@ using namespace ijk;
 int main(int argc, char *argv[]) {
     IJK_INITIALIZE_LOGGING();
 
-    promise<int> pm;
+    {
+        promise<int> pm;
 
-    auto fut = pm.get_future();
-    fut.then([](int n) {
-        LOG_INFO("n: {}", n);
-    }).finally([](auto n) {
-        LOG_INFO("finally");
-    });
+        auto fut = pm.get_future();
+        fut.then([](int n) {
+            LOG_INFO("n: {}", n);
+        }).finally([](auto n) {
+            LOG_INFO("finally");
+        });
 
-    // pm.set_value(111);
-    pm.set_exception(std::make_exception_ptr(std::logic_error("error")));
+        // pm.set_value(111);
+        pm.set_exception(std::make_exception_ptr(std::logic_error("error")));
+    }
+
+    {
+        promise<void> pm;
+        pm.set_value();
+
+        auto fut = pm.get_future();
+        fut.finally([](auto) {
+            LOG_INFO("finally");
+        });
+    }
 
     return 0;
 }
