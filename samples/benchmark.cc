@@ -9,7 +9,7 @@
 #include "ijk/base/mpmc_queue.h"
 #include "ijk/base/random.h"
 #include "ijk/base/stopwatch.h"
-#include "ijk/network/io_context_pool.hpp"
+#include "ijk/network/io_context.hpp"
 
 #include <any>
 #include <iostream>
