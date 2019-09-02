@@ -19,12 +19,13 @@ int main(int argc, char *argv[]) {
         auto fut = pm.get_future();
         fut.then([](int n) {
             LOG_INFO("n: {}", n);
+            throw std::logic_error("error");
         }).finally([](auto n) {
             LOG_INFO("finally");
         });
 
-        // pm.set_value(111);
-        pm.set_exception(std::make_exception_ptr(std::logic_error("error")));
+        pm.set_value(111);
+        // pm.set_exception(std::make_exception_ptr(std::logic_error("error")));
     }
 
     {

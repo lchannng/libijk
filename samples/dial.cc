@@ -15,26 +15,15 @@ int main(int argc, char *argv[]) {
 
     io_t io;
 
-#if 0
+#if 1
     asio::ip::tcp::endpoint ep(asio::ip::make_address("127.0.0.1"), 4000);
-    ijk::dial(io, ep).finally([](expected<tcp_connection::ptr> res) {
-        if (res.has_value()) {
+    ijk::dial(io, ep)
+        .then([](tcp_connection::ptr conn) {
             LOG_INFO("connected to server");
-        } else {
-            try {
-                std::rethrow_exception(res.error());
-            } catch (const asio::system_error &e) {
-                LOG_ERROR("connect failed with error: {}", e.code());
-            }
-        }
-    });
-#else
-    ijk::dial(io, "localhost", 4000)
-        .finally([](expected<tcp_connection::ptr> res) {
-            if (res.has_value()) {
-                LOG_INFO("connected to server");
-                res.value()->send(std::string("1111"));
-            } else {
+            conn->send(std::string("1111"));
+        })
+        .finally([](auto res) {
+            if (!res.has_value()) {
                 try {
                     std::rethrow_exception(res.error());
                 } catch (const asio::system_error &e) {
@@ -42,7 +31,21 @@ int main(int argc, char *argv[]) {
                 }
             }
         });
-
+#else
+    ijk::dial(io, "localhost", 4000)
+        .then([](tcp_connection::ptr conn) {
+            LOG_INFO("connected to server");
+            conn->send(std::string("1111"));
+        })
+        .finally([](auto res) {
+            if (!res.has_value()) {
+                try {
+                    std::rethrow_exception(res.error());
+                } catch (const asio::system_error &e) {
+                    LOG_ERROR("connect failed with error: {}", e.code());
+                }
+            }
+        });
 #endif
 
     io.run();
