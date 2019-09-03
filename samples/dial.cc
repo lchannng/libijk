@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
     io_t io;
 
-#if 1
+#if 0
     asio::ip::tcp::endpoint ep(asio::ip::make_address("127.0.0.1"), 4000);
     ijk::dial(io, ep)
         .then([](tcp_connection::ptr conn) {

@@ -51,29 +51,24 @@ future<tcp_connection::ptr> dial(io_t &io, const std::string &host, int port) {
             }
         });
 
-    promise<tcp_connection::ptr> conn_pm;
-    auto conn_fut = conn_pm.get_future();
-
-    resolve_fut.finally([pm = std::move(conn_pm),
-                         &io](expected<resolve_result> e) mutable {
-        if (!e.has_value()) {
-            pm.set_exception(e.error());
-            return;
-        }
+    return resolve_fut.then([&io](resolve_result res) {
+        promise<tcp_connection::ptr> conn_pm;
+        auto conn_fut = conn_pm.get_future();
 
         auto conn = tcp_connection::create(io);
-        asio::async_connect(conn->socket(), e.value(),
-                            [conn, pm = std::move(pm)](auto &ec, auto) mutable {
-                                if (!ec) {
-                                    pm.set_value(std::move(conn));
-                                } else {
-                                    pm.set_exception(std::make_exception_ptr(
-                                        asio::system_error(ec)));
-                                }
-                            });
-    });
+        asio::async_connect(
+            conn->socket(), res,
+            [conn, pm = std::move(conn_pm)](auto &ec, auto) mutable {
+                if (!ec) {
+                    pm.set_value(std::move(conn));
+                } else {
+                    pm.set_exception(
+                        std::make_exception_ptr(asio::system_error(ec)));
+                }
+            });
 
-    return conn_fut;
+        return conn_fut;
+    });
 }
 
 }
