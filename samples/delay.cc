@@ -19,8 +19,9 @@ int main(int argc, char *argv[]) {
         LOG_INFO("delay 1 second.");
     });
 
-    async(io, []() {
-        LOG_INFO("async");
+    asio::steady_timer timer(io.context());
+    delay(timer, std::chrono::seconds(1)).finally([](auto){
+        LOG_INFO("delay 1 second.");
     });
 
     io.run();
