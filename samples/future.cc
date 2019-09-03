@@ -38,5 +38,33 @@ int main(int argc, char *argv[]) {
         });
     }
 
+    { 
+        auto fut = make_ready_future(1);
+        fut.finally([](auto n){
+            LOG_INFO("n: {}", *n);
+        });
+    }
+
+    { 
+        auto fut = make_exception_future<int>(std::runtime_error("error"));
+        fut.finally([](auto n){
+            LOG_INFO("finally");
+        });
+    }
+
+    {
+        auto fut = make_ready_future(1);
+        fut.then([](int n) {
+               if (n == 1) {
+                   return make_exception_future<int>(
+                       std::runtime_error("error"));
+               }
+               return make_ready_future(n * 2);
+           })
+            .finally([](auto n) {
+                LOG_INFO("finally");
+            });
+    }
+
     return 0;
 }

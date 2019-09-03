@@ -360,5 +360,6 @@ inline std::string varfut_lib_version_string();
 #include "ijk/future/impl/join.h"
 #include "ijk/future/impl/promise.h"
 #include "ijk/future/impl/storage_impl.h"
+#include "ijk/future/impl/ext.h"
 
 #endif
