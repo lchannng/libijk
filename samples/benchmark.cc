@@ -91,7 +91,6 @@ int main(int argc, char *argv[])
         umap.emplace(ijk::randomString(i%12 + 15), i);
     }
     sw.start();
-
     std::string ip = "172.0.0.1:4000";
     for (auto i = 0; i < kCount; ++i) {
         umap.find(ip);
@@ -121,6 +120,13 @@ int main(int argc, char *argv[])
     }
     t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("shared_ptr.lock: {} ns", (double)t / (double)kCount);
+
+    sw.start();
+    for (auto i = 0; i < kCount; ++i) {
+        std::make_exception_ptr(std::logic_error("error"));
+    }
+    t = sw.elapsed<ijk::stopwatch::ns>();
+    LOG_INFO("make_exception_ptr: {} ns", (double)t / (double)kCount);
 
     return 0;
 }
