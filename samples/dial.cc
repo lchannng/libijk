@@ -5,8 +5,9 @@
  * Created Time: 2019/08/30 13:56:08
  */
 
- #include "ijk/base/logging.hpp"
- #include "ijk/network/dial.hpp"
+#include "ijk/base/logging.hpp"
+#include "ijk/network/io.hpp"
+#include "ijk/network/tcp_connection.hpp"
 
 using namespace ijk;
 
@@ -17,7 +18,7 @@ int main(int argc, char *argv[]) {
 
 #if 0
     asio::ip::tcp::endpoint ep(asio::ip::make_address("127.0.0.1"), 4000);
-    ijk::dial(io, ep)
+    ijk::dial<tcp_connection>(io, ep)
         .then([](tcp_connection::ptr conn) {
             LOG_INFO("connected to server");
             conn->send(std::string("1111"));
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
             }
         });
 #else
-    ijk::dial(io, "localhost", 4000)
+    ijk::dial<tcp_connection>(io, "localhost", 4000)
         .then([](tcp_connection::ptr conn) {
             LOG_INFO("connected to server");
             conn->send(std::string("1111"));
