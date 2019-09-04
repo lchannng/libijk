@@ -14,6 +14,26 @@
 
 namespace ijk {
 
+namespace details {
+
+template <typename T>
+class is_connection_type {
+private:
+    template <typename C>
+    static auto Test(void *)
+        -> decltype(std::declval<C>().socket(), std::true_type());
+
+    template <typename>
+    static std::false_type Test(...);
+
+    typedef decltype(Test<T>(0)) result;
+
+public:
+    static constexpr bool value = result::value;
+};
+
+}  // namespace details
+
 future<void> accept(asio::ip::tcp::acceptor &acceptor,
                     asio::ip::tcp::socket &socket) {
     Expects(!socket.is_open());
@@ -45,13 +65,18 @@ future<std::shared_ptr<Connection>> accept(asio::ip::tcp::acceptor &acceptor,
     return fut;
 }
 
-template<typename Connection>
-future<std::shared_ptr<Connection>> dial(io_t &io, const asio::ip::tcp::endpoint &ep) {
+template <typename Connection,
+          typename std::enable_if<
+              details::is_connection_type<Connection>::value>::type * = nullptr>
+future<std::shared_ptr<Connection>> dial(io_t &io,
+                                         const asio::ip::tcp::endpoint &ep) {
+    static_assert(details::is_connection_type<Connection>::value, "not conn!!!");
     promise<std::shared_ptr<Connection>> pm;
     auto fut = pm.get_future();
 
     auto conn = std::make_shared<Connection>(io);
-    conn->socket().async_connect(ep, [conn, pm = std::move(pm)](auto &ec) mutable {
+    conn->socket().async_connect(ep, [conn,
+                                      pm = std::move(pm)](auto &ec) mutable {
         if (!ec) {
             pm.set_value(std::move(conn));
         } else {
@@ -62,7 +87,9 @@ future<std::shared_ptr<Connection>> dial(io_t &io, const asio::ip::tcp::endpoint
     return fut;
 }
 
-template <typename Connection>
+template <typename Connection,
+          typename std::enable_if<
+              details::is_connection_type<Connection>::value>::type * = nullptr>
 future<std::shared_ptr<Connection>> dial(io_t &io, const std::string &host,
                                          int port) {
     asio::error_code ec;
@@ -116,7 +143,6 @@ future<size_t> read_some(asio::ip::tcp::socket &socket,
         buf, [pm = std::move(pm)](auto &ec, auto bytes_transfered) mutable {
             if (!ec) {
                 pm.set_value(bytes_transfered);
-                return;
             } else {
                 if (asio::error::eof == ec && bytes_transfered > 0) {
                     pm.set_value(bytes_transfered);
@@ -141,7 +167,6 @@ future<size_t> read_exactly(asio::ip::tcp::socket &socket,
         [pm = std::move(pm)](auto &ec, auto bytes_transfered) mutable {
             if (!ec) {
                 pm.set_value(bytes_transfered);
-                return;
             } else {
                 if (asio::error::eof == ec && bytes_transfered > 0) {
                     pm.set_value(bytes_transfered);
