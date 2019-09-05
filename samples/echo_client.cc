@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
                 return data.size();
             });
             conn->start();
-            conn->send("111");
+            conn->send(std::string_view("111"));
         })
         .finally([](auto res) {
             if (!res.has_value()) {
