@@ -18,11 +18,11 @@ int main(int argc, char *argv[]) {
 
     ijk::dial<tcp_connection>(io, ep)
         .then([](auto conn) {
-            conn->on_read([](auto &c, auto &data) {
+            conn->on_message([](auto &c, auto &data) {
                 c->shutdown();
                 return data.size();
             });
-            conn->start();
+            conn->run();
             conn->send(std::string_view("111"));
         })
         .finally([](auto res) {

@@ -8,24 +8,22 @@
 #include "ijk/network/base_connection.hpp"
 #include "ijk/network/io.hpp"
 
+#include <array>
 #include <atomic>
 
 using namespace ijk;
 
 class echo_connection : public base_connection {
 public:
-    using ijk::base_connection::base_connection;
+    using base_connection::base_connection;
 
     virtual void run() override {
         if (is_closing_or_closed()) return;
         auto self = shared_from_this();
-        buf_.reserve(1024);
-        ijk::read_some(socket(), asio::buffer(buf_.writable_head(),
-                                              buf_.writeable_bytes()))
+        ijk::read_some(socket(), asio::buffer(buf_.data(), buf_.size()))
             .then([this, self](auto bytes) {
-                buf_.commit(bytes);
-                size_t n = invoke_message_cb(self, std::string_view(buf_.data(), buf_.size()));
-                buf_.consume(n);
+                size_t n = invoke_message_cb(
+                    self, std::string_view(buf_.data(), bytes));
             })
             .finally([this, self](auto e) {
                 if (e.has_value()) {
@@ -37,17 +35,13 @@ public:
     }
 
 private:
-    buffer buf_;
+    std::array<char, 1024> buf_;
 };
 
 void handle_connection(const echo_connection::ptr &conn) {
     conn->on_message([](auto &s, auto &data) {
             s->send(std::string(data));
-            // s->shutdown();
             return data.size();
-        })
-        .on_close([](auto &s, auto &ec) {
-            LOG_INFO("session {} closed: {}", s->id(), ec);
         })
         .run();
 }

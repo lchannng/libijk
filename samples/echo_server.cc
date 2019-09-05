@@ -11,15 +11,15 @@
 using namespace ijk;
 
 void handle_connection(const tcp_connection::ptr &conn) {
-    conn->on_read([](auto &s, auto &data) {
+    conn->on_message([](auto &s, auto &data) {
             s->send(data);
             // s->shutdown();
             return data.size();
         })
-        .on_closed([](auto &s, auto &ec) {
+        .on_close([](auto &s, auto &ec) {
             // LOG_INFO("session {} closed: {}", s->id(), ec);
         })
-        .start();
+        .run();
 }
 
 void acceptor_loop(asio::ip::tcp::acceptor &acceptor, io_context_pool &pool) {
