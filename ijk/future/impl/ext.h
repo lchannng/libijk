@@ -18,7 +18,7 @@ future<T> make_ready_future(T &&val) {
     return storage_type::future_type{storage};
 }
 
-future<void> make_ready_future() {
+inline future<void> make_ready_future() {
     using storage_type = future<void>::storage_type;
     detail::Storage_ptr<storage_type> storage;
     storage.allocate(storage_type::allocator_type{});

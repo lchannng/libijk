@@ -4,11 +4,7 @@
  * Date  : 2019/09/03 19:37:14
  */
 
-#include "ijk/base/cancel_token.h"
-#include "ijk/base/gsl.h"
 #include "ijk/base/logging.hpp"
-#include "ijk/base/noncopyable.h"
-#include "ijk/future/future.h"
 #include "ijk/network/io.hpp"
 #include "ijk/network/tcp_connection.hpp"
 
@@ -21,7 +17,7 @@ void handle_connection(const tcp_connection::ptr &conn) {
             return data.size();
         })
         .on_closed([](auto &s, auto &ec) {
-            LOG_INFO("session {} closed: {}", s->id(), ec);
+            // LOG_INFO("session {} closed: {}", s->id(), ec);
         })
         .start();
 }

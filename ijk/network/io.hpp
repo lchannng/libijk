@@ -80,7 +80,7 @@ future<std::shared_ptr<Connection>> dial(io_t &io,
         if (!ec) {
             pm.set_value(std::move(conn));
         } else {
-            pm.set_exception(std::make_exception_ptr(asio::system_error(ec)));
+            pm.set_exception(std::make_exception_ptr(ec));
         }
     });
 
