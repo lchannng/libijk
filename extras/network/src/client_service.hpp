@@ -12,7 +12,8 @@
 #include "server_addr.hpp"
 
 #include "ijk/base/logging.hpp"
-#include "ijk/network/tcp_connector.hpp"
+#include "ijk/network/io.hpp"
+#include "ijk/network/tcp_connection.hpp"
 
 #include <map>
 #include <memory>
@@ -28,7 +29,6 @@ class client_service final : public network_service {
             : target_addr(addr), endpoint(ep) {}
         server_addr target_addr;
         asio::ip::tcp::endpoint endpoint;
-        ijk::tcp_connector::ptr connector;
         ijk::tcp_connection::ptr conn;
     };
 
@@ -51,26 +51,17 @@ public:
 
 private:
     void connect_server(server_connector *s) {
-        if (s->connector == nullptr)
-            s->connector = ijk::tcp_connector::create(io_);
 
-        s->connector
-            ->on_end_connecting([this, s](auto &ec, auto &&conn) {
-                if (nullptr == s) {
-                    LOG_ERROR("failed to get server connector {}",
-                              s->target_addr.to_string());
-                    return;
-                }
-
-                if (ec) {
-                    LOG_ERROR("failed to connect to server: {}, ep: {}",
-                              s->target_addr.to_string(), s->endpoint);
-                    return;
-                }
-
+        ijk::dial<ijk::tcp_connection>(io_, s->endpoint)
+            .then([this, s](auto conn) {
                 on_connected_to_server(s, std::move(conn));
             })
-            .connect(s->endpoint);
+            .finally([s](auto e) {
+                if (!e.has_value()) {
+                    LOG_ERROR("failed to connect to server: {}, ep: {}",
+                              s->target_addr.to_string(), s->endpoint);
+                }
+            });
 
         LOG_INFO("connecting to server: {}, ep: {}", s->target_addr.to_string(), s->endpoint);
     }
