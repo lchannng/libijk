@@ -134,7 +134,7 @@ future<std::shared_ptr<Connection>> dial(io_t &io, const std::string &host,
 future<size_t> read_some(asio::ip::tcp::socket &socket,
                          const asio::mutable_buffer &buf) {
     if (!socket.is_open()) {
-        return make_ready_future<size_t>(0);
+        return make_exception_future<size_t>(asio::error::eof);
     }
 
     promise<size_t> pm;
@@ -207,6 +207,16 @@ future<void> delay(asio::steady_timer &timer,
     });
 
     return storage_type::future_type{storage};
+}
+
+asio::error_code get_io_error_code(const std::exception_ptr& eptr) {
+    try {
+        std::rethrow_exception(eptr);
+    } catch (const asio::error_code &ec){
+        return ec;
+    } catch (...) {
+        return asio::error_code{};
+    }
 }
 
 }  // namespace ijk
