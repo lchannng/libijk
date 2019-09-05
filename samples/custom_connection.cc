@@ -9,7 +9,6 @@
 #include "ijk/network/io.hpp"
 
 #include <array>
-#include <atomic>
 
 using namespace ijk;
 
@@ -22,8 +21,7 @@ public:
         auto self = shared_from_this();
         ijk::read_some(socket(), asio::buffer(buf_.data(), buf_.size()))
             .then([this, self](auto bytes) {
-                size_t n = invoke_message_cb(
-                    self, std::string_view(buf_.data(), bytes));
+                send(std::string(buf_.data(), bytes));
             })
             .finally([this, self](auto e) {
                 if (e.has_value()) {
@@ -38,18 +36,10 @@ private:
     std::array<char, 1024> buf_;
 };
 
-void handle_connection(const echo_connection::ptr &conn) {
-    conn->on_message([](auto &s, auto &data) {
-            s->send(std::string(data));
-            return data.size();
-        })
-        .run();
-}
-
 void acceptor_loop(asio::ip::tcp::acceptor &acceptor, io_context_pool &pool) {
     auto &io = pool.get();
     ijk::accept<echo_connection>(acceptor, io)
-        .then([](auto conn) { handle_connection(conn); })
+        .then([](auto conn) { conn->run(); })
         .finally([&acceptor, &pool](auto e) {
             if (e.has_value()) {
                 acceptor_loop(acceptor, pool);
