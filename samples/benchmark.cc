@@ -19,7 +19,7 @@
 int main(int argc, char *argv[])
 {
     IJK_INITIALIZE_LOGGING();
-    const size_t kCount = 1000000;
+    const auto kCount = 1000000;
     ijk::stopwatch sw;    
 
     int a = 0;
