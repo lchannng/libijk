@@ -42,7 +42,7 @@ Basic_future<Alloc, Ts...>::Basic_future(detail::Storage_ptr<storage_type> s)
 // finally() instead.
 template <typename Alloc, typename... Ts>
 template <typename CbT>
-[[nodiscard]] auto Basic_future<Alloc, Ts...>::then(CbT&& cb) {
+auto Basic_future<Alloc, Ts...>::then(CbT&& cb) {
   // Kinda flying by the seats of our pants here...
   // We rely on the fact that `Immediate_queue` handlers ignore the passed
   // queue.
@@ -52,7 +52,7 @@ template <typename CbT>
 
 template <typename Alloc, typename... Ts>
 template <typename CbT>
-[[nodiscard]] auto Basic_future<Alloc, Ts...>::then_expect(CbT&& cb) {
+auto Basic_future<Alloc, Ts...>::then_expect(CbT&& cb) {
   // Kinda flying by the seats of our pants here...
   // We rely on the fact that `Immediate_queue` handlers ignore the passed
   // queue.
@@ -81,7 +81,7 @@ void Basic_future<Alloc, Ts...>::finally(CbT&& cb) {
 // TODO: Maybe we can add an option to change that behavior
 template <typename Alloc, typename... Ts>
 template <typename QueueT, typename CbT>
-[[nodiscard]] auto Basic_future<Alloc, Ts...>::then(QueueT& queue, CbT&& cb) {
+auto Basic_future<Alloc, Ts...>::then(QueueT& queue, CbT&& cb) {
   using handler_t =
       detail::Future_then_handler<Alloc, std::decay_t<CbT>, QueueT, Ts...>;
   using result_storage_t = typename handler_t::dst_storage_type;
@@ -98,7 +98,7 @@ template <typename QueueT, typename CbT>
 
 template <typename Alloc, typename... Ts>
 template <typename QueueT, typename CbT>
-[[nodiscard]] auto Basic_future<Alloc, Ts...>::then_expect(QueueT& queue,
+auto Basic_future<Alloc, Ts...>::then_expect(QueueT& queue,
                                                            CbT&& cb) {
   using handler_t = detail::Future_then_expect_handler<Alloc, std::decay_t<CbT>,
                                                        QueueT, Ts...>;

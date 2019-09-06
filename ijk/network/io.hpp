@@ -131,49 +131,37 @@ future<std::shared_ptr<Connection>> dial(io_t &io, const std::string &host,
     });
 }
 
-future<size_t> read_some(asio::ip::tcp::socket &socket,
+future<asio::error_code, size_t> read_some(asio::ip::tcp::socket &socket,
                          const asio::mutable_buffer &buf) {
+    promise<asio::error_code, size_t> pm;
+    auto fut = pm.get_future();
+
     if (!socket.is_open()) {
-        return make_exception_future<size_t>(asio::error::eof);
+        pm.set_value(asio::error::eof, 0);
+        return fut;
     }
 
-    promise<size_t> pm;
-    auto fut = pm.get_future();
     socket.async_read_some(
         buf, [pm = std::move(pm)](auto &ec, auto bytes_transfered) mutable {
-            if (!ec) {
-                pm.set_value(bytes_transfered);
-            } else {
-                if (asio::error::eof == ec && bytes_transfered > 0) {
-                    pm.set_value(bytes_transfered);
-                } else {
-                    pm.set_exception(std::make_exception_ptr(ec));
-                }
-            }
+            pm.set_value(ec, bytes_transfered);
         });
     return fut;
 }
 
-future<size_t> read_exactly(asio::ip::tcp::socket &socket,
+future<asio::error_code, size_t> read_exactly(asio::ip::tcp::socket &socket,
                             const asio::mutable_buffer &buf) {
+    promise<asio::error_code, size_t> pm;
+    auto fut = pm.get_future();
+
     if (!socket.is_open()) {
-        return make_ready_future<size_t>(0);
+        pm.set_value(asio::error::eof, 0);
+        return fut;
     }
 
-    promise<size_t> pm;
-    auto fut = pm.get_future();
     asio::async_read(
         socket, buf,
         [pm = std::move(pm)](auto &ec, auto bytes_transfered) mutable {
-            if (!ec) {
-                pm.set_value(bytes_transfered);
-            } else {
-                if (asio::error::eof == ec && bytes_transfered > 0) {
-                    pm.set_value(bytes_transfered);
-                } else {
-                    pm.set_exception(std::make_exception_ptr(ec));
-                }
-            }
+                pm.set_value(ec, bytes_transfered);
         });
     return fut;
 }
