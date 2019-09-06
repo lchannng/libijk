@@ -21,7 +21,7 @@
 
 namespace ijk {
 
-class tcp_connection final : public base_connection {
+class tcp_connection final : public base_connection<tcp_connection> {
 public:
     using base_connection::base_connection;
 

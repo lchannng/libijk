@@ -13,6 +13,7 @@
 #include "ijk/base/buffer.h"
 #include "ijk/base/gsl.h"
 #include "ijk/base/logging.hpp"
+#include "ijk/base/noncopyable.h"
 
 #include <cassert>
 #include <list>
@@ -20,10 +21,19 @@
 
 namespace ijk {
 
-class base_connection : public std::enable_shared_from_this<base_connection> {
+namespace details {
+struct abstract_connection : private noncopyable {
+    virtual void run() = 0;
+    virtual ~abstract_connection() = default;
+};
+}  // namespace details
+
+template <typename Derived>
+class base_connection : public std::enable_shared_from_this<Derived>,
+                        public details::abstract_connection {
 public:
-    using ptr = std::shared_ptr<base_connection>;
-    using weak_ptr = std::weak_ptr<base_connection>;
+    using ptr = std::shared_ptr<Derived>;
+    using weak_ptr = std::weak_ptr<Derived>;
     using message_callback =
         std::function<size_t(const ptr &, const std::string_view &)>;
     using close_callback =
@@ -43,7 +53,7 @@ public:
           closing_(false),
           closed_(false) {}
 
-    virtual ~base_connection() {}
+    ~base_connection() = default;
 
     inline uint64_t id() { return id_; }
 
@@ -64,8 +74,6 @@ public:
         auto ep = socket_.remote_endpoint();
         return ep.address().to_string() + ":" + std::to_string(ep.port());
     }
-
-    virtual void run() = 0;
 
     void shutdown() {
         io_.dispatch([this, self = shared_from_this()]() {
@@ -138,7 +146,8 @@ protected:
         }
     }
 
-    inline size_t invoke_message_cb(const ptr& self, const std::string_view& buf) {
+    inline size_t invoke_message_cb(const ptr &self,
+                                    const std::string_view &buf) {
         if (message_cb_) {
             return message_cb_(self, buf);
         }
@@ -216,7 +225,6 @@ private:
     close_callback close_cb_;
     bool closing_;
     bool closed_;
-
 };
 
 }  // namespace ijk

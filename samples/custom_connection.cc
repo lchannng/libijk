@@ -12,7 +12,7 @@
 
 using namespace ijk;
 
-class echo_connection : public base_connection {
+class echo_connection : public base_connection<echo_connection> {
 public:
     using base_connection::base_connection;
 
