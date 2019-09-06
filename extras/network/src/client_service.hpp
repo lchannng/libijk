@@ -70,7 +70,7 @@ private:
                                 ijk::tcp_connection::ptr &&conn) {
         s->conn = std::move(conn);
         s->conn
-            ->on_closed([this, s](auto &conn, auto &ec) {
+            ->on_close([this, s](auto &conn, auto &ec) {
                 Expects(s->conn.get() == conn.get());
                 LOG_ERROR("lost connection to server: {}, ep: {}",
                           s->target_addr.to_string(), s->endpoint);
@@ -79,8 +79,8 @@ private:
                 // reconnect to server;
                 connect_server(s);
             })
-            .on_read([this, s](auto &conn, auto &data) { return data.size(); })
-            .start();
+            .on_message([this, s](auto &conn, auto &data) { return data.size(); })
+            .run();
 
         LOG_INFO("connected to server: {}, ep: {}", s->target_addr.to_string(), s->endpoint);
     }

@@ -16,6 +16,20 @@
 #include <mutex>
 #include <shared_mutex>
 
+class base : public std::enable_shared_from_this<base> {
+public:
+    base() = default;
+    int a {0};
+    virtual ~base() = default;
+};
+
+class derived : public base {
+public:
+    derived() = default;
+    ~derived() = default;
+    int b {0};
+};
+
 int main(int argc, char *argv[])
 {
     IJK_INITIALIZE_LOGGING();
@@ -127,6 +141,24 @@ int main(int argc, char *argv[])
     }
     t = sw.elapsed<ijk::stopwatch::ns>();
     LOG_INFO("make_exception_ptr: {} ns", (double)t / (double)kCount);
+
+    auto b = std::make_shared<base>();
+
+    sw.start();
+    for (auto i = 0; i < kCount; ++i) {
+        auto p = b->shared_from_this();
+        (void)p;
+    }
+    t = sw.elapsed<ijk::stopwatch::ns>();
+    LOG_INFO("shared_from_this: {} ns", (double)t / (double)kCount);
+
+    sw.start();
+    for (auto i = 0; i < kCount; ++i) {
+        auto d = std::static_pointer_cast<derived>(b->shared_from_this());
+        (void)d;
+    }
+    t = sw.elapsed<ijk::stopwatch::ns>();
+    LOG_INFO("shared_from_this + static_pointer_cast: {} ns", (double)t / (double)kCount);
 
     return 0;
 }
