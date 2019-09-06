@@ -55,6 +55,14 @@ public:
 
     ~base_connection() = default;
 
+    inline ptr shared_from_this() {
+        return std::enable_shared_from_this<Derived>::shared_from_this();
+    }
+
+    inline ptr weak_from_this() {
+        return std::enable_shared_from_this<Derived>::weak_from_this();
+    }
+
     inline uint64_t id() { return id_; }
 
     inline io_t &io() { return io_; }
