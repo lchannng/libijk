@@ -206,9 +206,10 @@ future<int> wait_signal(io_t &io, std::initializer_list<int> sig_numbers) {
     promise<int> pm;
     auto fut = pm.get_future();
 
-    sigset->async_wait([sigset, pm = std::move(pm)](auto ec, auto signum) {
-        if (!ec) pm.set_value(signum);
-    });
+    sigset->async_wait(
+        [sigset, pm = std::move(pm)](auto ec, auto signum) mutable {
+            if (!ec) pm.set_value(signum);
+        });
 
     return fut;
 }
