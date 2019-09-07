@@ -120,16 +120,16 @@ public:
         });
     }
 
-    base_connection &on_message(message_callback &&cb) {
+    Derived &on_message(message_callback &&cb) {
         // Expects(io_.running_in_this_thread());
         message_cb_ = std::forward<message_callback>(cb);
-        return *this;
+        return *static_cast<Derived *>(this);
     }
 
-    base_connection &on_close(close_callback &&cb) {
+    Derived &on_close(close_callback &&cb) {
         // Expects(io_.running_in_this_thread());
         close_cb_ = std::forward<close_callback>(cb);
-        return *this;
+        return *static_cast<Derived *>(this);
     }
 
     bool is_closing_or_closed() { return closed_ || closing_; }
