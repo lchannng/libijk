@@ -197,6 +197,22 @@ future<void> delay(asio::steady_timer &timer,
     return storage_type::future_type{storage};
 }
 
+future<int> wait_signal(io_t &io, std::initializer_list<int> sig_numbers) {
+    auto sigset = std::make_shared<asio::signal_set>(io.context());
+    for (auto signum : sig_numbers) {
+        sigset->add(signum);
+    }
+
+    promise<int> pm;
+    auto fut = pm.get_future();
+
+    sigset->async_wait([sigset, pm = std::move(pm)](auto ec, auto signum) {
+        if (!ec) pm.set_value(signum);
+    });
+
+    return fut;
+}
+
 asio::error_code get_io_error_code(const std::exception_ptr& eptr) {
     try {
         std::rethrow_exception(eptr);
