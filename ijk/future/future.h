@@ -100,7 +100,7 @@ class Basic_future {
    * @post the future will be \b uninitialized
    */
   template <typename CbT>
-  [[nodiscard]] auto then(CbT&& callback);
+  auto then(CbT&& callback);
 
   /**
    * @brief Creates a future that is finished by the invocation of cb when this
@@ -116,7 +116,7 @@ class Basic_future {
    * @post the future will be \b uninitialized
    */
   template <typename QueueT, typename CbT>
-  [[nodiscard]] auto then(QueueT& queue, CbT&& callback);
+  auto then(QueueT& queue, CbT&& callback);
 
   /**
    * @brief Creates a future that is finished by the invocation of cb when this
@@ -130,7 +130,7 @@ class Basic_future {
    * @post the future will be \b uninitialized
    */
   template <typename CbT>
-  [[nodiscard]] auto then_expect(CbT&& callback);
+  auto then_expect(CbT&& callback);
 
   /**
    * @brief Creates a future that is finished by the invocation of cb from
@@ -146,7 +146,7 @@ class Basic_future {
    * @post the future will be \b uninitialized
    */
   template <typename QueueT, typename CbT>
-  [[nodiscard]] auto then_expect(QueueT& queue, CbT&& callback);
+  auto then_expect(QueueT& queue, CbT&& callback);
 
   /**
    * @brief Invokes cb when this is finished.
