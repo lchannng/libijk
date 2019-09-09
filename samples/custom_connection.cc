@@ -21,12 +21,12 @@ public:
         if (is_closing_or_closed()) return;
         auto self = shared_from_this();
         ijk::read_some(socket(), asio::buffer(buf_.data(), buf_.size()))
-            .then([this, self](auto ec, auto bytes) {
-                if (ec) {
-                    invoke_close_cb(self, ec);
-                } else {
-                    send(std::string(buf_.data(), bytes));
+            .finally([this, self](auto bytes) {
+                if (bytes.has_value()) {
+                    send(std::string(buf_.data(), *bytes));
                     run();
+                } else {
+                    invoke_close_cb(self, asio::error_code());
                 }
             });
     }

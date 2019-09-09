@@ -131,19 +131,27 @@ future<std::shared_ptr<Connection>> dial(io_t &io, const std::string &host,
     });
 }
 
-future<asio::error_code, size_t> read_some(asio::ip::tcp::socket &socket,
+future<size_t> read_some(asio::ip::tcp::socket &socket,
                          const asio::mutable_buffer &buf) {
-    promise<asio::error_code, size_t> pm;
+    promise<size_t> pm;
     auto fut = pm.get_future();
 
     if (!socket.is_open()) {
-        pm.set_value(asio::error::eof, 0);
+        pm.set_value(asio::error::eof);
         return fut;
     }
 
     socket.async_read_some(
         buf, [pm = std::move(pm)](auto &ec, auto bytes_transfered) mutable {
-            pm.set_value(ec, bytes_transfered);
+            if (!ec) {
+                pm.set_value(bytes_transfered);
+            } else {
+                if (asio::error::eof == ec && bytes_transfered > 0) {
+                    pm.set_value(bytes_transfered);
+                } else {
+                    pm.set_exception(std::make_exception_ptr(ec));
+                }
+            }
         });
     return fut;
 }

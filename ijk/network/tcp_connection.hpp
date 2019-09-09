@@ -40,21 +40,17 @@ private:
         recv_buf_.reserve(4096);
         ijk::read_some(socket(), asio::buffer(recv_buf_.writable_head(),
                                               recv_buf_.writeable_bytes()))
-            .then([this, self](auto ec, auto bytes) {
-                if (ec) {
-                    invoke_close_cb(self, ec);
-                    return;
-                }
-                recv_buf_.commit(bytes);
-                size_t n = invoke_message_cb(
-                    self, std::string_view(recv_buf_.data(), recv_buf_.size()));
-                recv_buf_.consume(n);
-
-                read_loop();
-            })
             .finally([this, self](auto e) {
                 if (!e.has_value()) {
                     invoke_close_cb(self, asio::error_code{});
+                } else {
+                    recv_buf_.commit(e.value());
+                    size_t n = invoke_message_cb(
+                        self,
+                        std::string_view(recv_buf_.data(), recv_buf_.size()));
+                    recv_buf_.consume(n);
+
+                    read_loop();
                 }
             });
     }
