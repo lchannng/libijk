@@ -4,6 +4,7 @@
  * Date  : 2019/08/07 19:40:12
  */
 
+#include "ijk/base/ignore_unused.hpp"
 #include "ijk/base/logging.hpp"
 #include "ijk/base/mpmc_blocking_q.hpp"
 #include "ijk/base/mpmc_queue.h"
@@ -32,6 +33,7 @@ public:
 
 int main(int argc, char *argv[])
 {
+    ijk::ignore_unused(argc, argv);
     IJK_INITIALIZE_LOGGING();
     const auto kCount = 1000000;
     ijk::stopwatch sw;    

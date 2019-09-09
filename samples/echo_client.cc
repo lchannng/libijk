@@ -5,6 +5,7 @@
  * Created Time: 2018/10/28 15:45:08
  */
 
+#include "ijk/base/ignore_unused.hpp"
 #include "ijk/base/logging.hpp"
 #include "ijk/network/io.hpp"
 #include "ijk/network/tcp_connection.hpp"
@@ -12,6 +13,7 @@
 using namespace ijk;
 
 int main(int argc, char *argv[]) {
+    ignore_unused(argc, argv);
     IJK_INITIALIZE_LOGGING();
     ijk::io_t io;
     asio::ip::tcp::endpoint ep(asio::ip::address_v4::loopback(), 4000);

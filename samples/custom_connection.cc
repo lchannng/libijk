@@ -4,6 +4,7 @@
  * Date  : 2019/09/03 19:37:14
  */
 
+#include "ijk/base/ignore_unused.hpp"
 #include "ijk/base/logging.hpp"
 #include "ijk/network/base_connection.hpp"
 #include "ijk/network/io.hpp"
@@ -56,6 +57,7 @@ void acceptor_loop(asio::ip::tcp::acceptor &acceptor, io_context_pool &pool) {
 }
 
 int main(int argc, char *argv[]) {
+    ignore_unused(argc, argv);
     IJK_INITIALIZE_LOGGING();
 
     ijk::io_context_pool pool;

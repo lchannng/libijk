@@ -5,13 +5,16 @@
  * Created Time: 2019/08/30 19:34:40
  */
 
- #include "ijk/base/logging.hpp"
- #include "ijk/network/io.hpp"
+#include "ijk/base/ignore_unused.hpp"
+#include "ijk/base/logging.hpp"
+#include "ijk/network/io.hpp"
 
 using namespace ijk;
 
 int main(int argc, char *argv[]) {
+    ignore_unused(argc, argv);
     IJK_INITIALIZE_LOGGING();
+
     io_t io;
 
     LOG_INFO("before delay");
