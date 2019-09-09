@@ -8,12 +8,10 @@
 #ifndef BASE_CONNECTION_HPP_2NGLFYCW
 #define BASE_CONNECTION_HPP_2NGLFYCW
 
-#include "io.hpp"
-
-#include "ijk/base/buffer.h"
 #include "ijk/base/gsl.h"
 #include "ijk/base/logging.hpp"
 #include "ijk/base/noncopyable.h"
+#include "ijk/network/io.hpp"
 
 #include <cassert>
 #include <list>
