@@ -46,6 +46,20 @@ int main(int argc, char *argv[]) {
     }
 
     { 
+        auto fut = make_ready_future(1, 3);
+        fut.finally([](auto n0, auto n1){
+            LOG_INFO("n0: {}, n1: {}", *n0, *n1);
+        });
+    }
+
+    {
+        auto fut = make_ready_future();
+        fut.finally([](auto){
+            LOG_INFO("finally");
+        });
+    }
+
+    { 
         auto fut = make_exception_future<int>(std::runtime_error("error"));
         fut.finally([](auto n){
             LOG_INFO("finally");

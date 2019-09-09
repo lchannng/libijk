@@ -9,16 +9,17 @@
 #define EXT_H_NXKYPJ1M
 
 namespace ijk {
-template <typename T>
-future<T> make_ready_future(T &&val) {
-    using storage_type = typename future<T>::storage_type;
+template <typename... T>
+future<T...> make_ready_future(T &&... vals) {
+    using future_type = future<T...>;
+    using storage_type = typename future_type::storage_type;
     using allocator_type = typename storage_type::allocator_type;
     using fullfill_type = typename storage_type::fullfill_type;
 
     detail::Storage_ptr<storage_type> storage;
     storage.allocate(allocator_type{});
-    storage->fullfill(fullfill_type{std::forward<T>(val)});
-    return future<T>{storage};
+    storage->fullfill(fullfill_type{std::forward<T>(vals)...});
+    return future_type{storage};
 }
 
 inline future<void> make_ready_future() {
