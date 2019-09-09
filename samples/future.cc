@@ -5,12 +5,14 @@
  * Created Time: 2019/08/30 13:56:08
  */
 
- #include "ijk/base/logging.hpp"
- #include "ijk/future/future.h"
+#include "ijk/base/ignore_unused.hpp"
+#include "ijk/base/logging.hpp"
+#include "ijk/future/future.h"
 
 using namespace ijk;
 
 int main(int argc, char *argv[]) {
+    ignore_unused(argc, argv);
     IJK_INITIALIZE_LOGGING();
 
     {
