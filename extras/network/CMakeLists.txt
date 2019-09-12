@@ -15,3 +15,10 @@ target_include_directories(snet PRIVATE
     ${NETWORK_ROOT}/src
     ${Protobuf_INCLUDE_DIRS}
 )
+
+add_executable(snet-sample ${NETWORK_ROOT}/samples/main.cc)
+target_link_libraries(snet-sample ${Protobuf_LIBRARIES} ijk snet)
+target_include_directories(snet-sample PRIVATE
+    ${NETWORK_ROOT}/src
+    ${Protobuf_INCLUDE_DIRS}
+)

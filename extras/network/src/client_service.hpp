@@ -76,8 +76,10 @@ private:
                           s->target_addr.to_string(), s->endpoint);
                 s->conn.reset();
 
-                // reconnect to server;
-                connect_server(s);
+                ijk::delay(io_, std::chrono::seconds(3)).then([this, s] {
+                    // reconnect to server;
+                    connect_server(s);
+                });
             })
             .on_message([this, s](auto &conn, auto &data) { return data.size(); })
             .run();

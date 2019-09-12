@@ -12,7 +12,7 @@
 #include "client_service.hpp"
 
 #include "ijk/base/gsl.h"
-#include "ijk/network/asio_headers.hpp"
+#include "ijk/network/asio_compatibility.hpp"
 
 #include <map>
 
