@@ -13,7 +13,6 @@
 
 #include "ijk/base/logging.hpp"
 #include "ijk/network/io.hpp"
-#include "ijk/network/tcp_connection.hpp"
 
 #include <map>
 #include <memory>
@@ -29,7 +28,7 @@ class client_service final : public network_service {
             : target_addr(addr), endpoint(ep) {}
         server_addr target_addr;
         asio::ip::tcp::endpoint endpoint;
-        ijk::tcp_connection::ptr conn;
+        server_connection::ptr conn;
     };
 
 public:
@@ -52,7 +51,7 @@ public:
 private:
     void connect_server(server_connector *s) {
 
-        ijk::dial<ijk::tcp_connection>(io_, s->endpoint)
+        ijk::dial<server_connection>(io_, s->endpoint)
             .then([this, s](auto conn) {
                 on_connected_to_server(s, std::move(conn));
             })
@@ -67,7 +66,7 @@ private:
     }
 
     void on_connected_to_server(server_connector *s,
-                                ijk::tcp_connection::ptr &&conn) {
+                                server_connection::ptr &&conn) {
         s->conn = std::move(conn);
         s->conn
             ->on_close([this, s](auto &conn, auto &ec) {
