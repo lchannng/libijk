@@ -17,7 +17,7 @@ class echo_connection : public base_connection<echo_connection> {
 public:
     using base_connection::base_connection;
 
-    virtual void run() override {
+    void run() {
         if (is_closing_or_closed()) return;
         auto self = shared_from_this();
         ijk::read_some(socket(), asio::buffer(buf_.data(), buf_.size()))

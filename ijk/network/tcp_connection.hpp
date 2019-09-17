@@ -25,7 +25,7 @@ class tcp_connection final : public base_connection<tcp_connection> {
 public:
     using base_connection::base_connection;
 
-    void run() override {
+    void run() {
         if (io().running_in_this_thread()) {
             read_loop();
         } else {

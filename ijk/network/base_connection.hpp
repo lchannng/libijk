@@ -19,16 +19,8 @@
 
 namespace ijk {
 
-namespace details {
-struct abstract_connection : private noncopyable {
-    virtual void run() = 0;
-    virtual ~abstract_connection() = default;
-};
-}  // namespace details
-
 template <typename Derived>
-class base_connection : public std::enable_shared_from_this<Derived>,
-                        public details::abstract_connection {
+class base_connection : public std::enable_shared_from_this<Derived> {
 public:
     using ptr = std::shared_ptr<Derived>;
     using weak_ptr = std::weak_ptr<Derived>;
