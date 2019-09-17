@@ -33,9 +33,6 @@ class client_service final : public network_service {
 
 public:
     using ptr = std::unique_ptr<client_service>;
-
-    size_t poll() { return io_.poll(); }
-
     void start_client(const server_addr &target_addr,
                       const asio::ip::tcp::endpoint &ep) {
         if (target_servers_.find(target_addr) != target_servers_.end()) {
@@ -89,7 +86,6 @@ private:
     server_connector *get_server_connector(const server_addr &target_addr) {}
 
 private:
-    ijk::io_t io_;
     std::map<server_addr, server_connector::ptr> target_servers_;
 };
 }  // namespace xx
