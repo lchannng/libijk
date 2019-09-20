@@ -13,6 +13,8 @@ int main(int argc, char *argv[])
 
     auto addr = asio::ip::make_address("127.0.0.1");
     asio::ip::tcp::endpoint ep(addr, 4000);
+
+    sn.start_server(ep);
     sn.start_client(xx::server_addr(1, 1, 101, 1), ep);
 
     while (true) {

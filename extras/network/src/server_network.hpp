@@ -8,11 +8,11 @@
 #ifndef SERVER_NETWORK_HPP_G3OOXXHE
 #define SERVER_NETWORK_HPP_G3OOXXHE
 
-#include "server_addr.hpp"
 #include "client_service.hpp"
+#include "server_addr.hpp"
+#include "server_service.hpp"
 
 #include "ijk/base/gsl.h"
-#include "ijk/network/asio_compatibility.hpp"
 
 #include <map>
 
@@ -34,12 +34,14 @@ public:
         iter->second->start_client(target_addr, ep);
     }
 
-    void start_server(const asio::ip::tcp::endpoint& ep) {
-
+    void start_server(const asio::ip::tcp::endpoint& ep) {Ensures(server_service_ == nullptr);
+        server_service_ = std::make_unique<server_service>(my_svr_addr_, ep);
+        server_service_->start_server();
     }
 
     size_t poll() {
         size_t count = 0;
+        count += server_service_->poll();
         for (auto& client : client_services_) {
             count += client.second->poll();
         }
@@ -49,6 +51,7 @@ public:
 private:
     server_addr my_svr_addr_;
     std::map<uint8_t, client_service::ptr> client_services_;
+    std::unique_ptr<server_service> server_service_;
 };
 
 }
