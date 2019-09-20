@@ -52,10 +52,11 @@ private:
             .then([this, s](auto conn) {
                 on_connected_to_server(s, std::move(conn));
             })
-            .finally([s](auto e) {
+            .finally([this, s](auto e) {
                 if (!e.has_value()) {
                     LOG_ERROR("failed to connect to server: {}, ep: {}",
                               s->target_addr.to_string(), s->endpoint);
+                    reconnect(s);
                 }
             });
 
@@ -71,11 +72,7 @@ private:
                 LOG_ERROR("lost connection to server: {}, ep: {}",
                           s->target_addr.to_string(), s->endpoint);
                 s->conn.reset();
-
-                ijk::delay(io_, std::chrono::seconds(3)).then([this, s] {
-                    // reconnect to server;
-                    connect_server(s);
-                });
+                reconnect(s);
             })
             .on_message([this, s](auto &conn, auto &data) { return data.size(); })
             .run();
@@ -83,7 +80,12 @@ private:
         LOG_INFO("connected to server: {}, ep: {}", s->target_addr.to_string(), s->endpoint);
     }
 
-    server_connector *get_server_connector(const server_addr &target_addr) {}
+    void reconnect(server_connector* s) {
+        ijk::delay(io_, std::chrono::seconds(3)).then([this, s] {
+            // reconnect to server;
+            connect_server(s);
+        });
+    }
 
 private:
     std::map<server_addr, server_connector::ptr> target_servers_;

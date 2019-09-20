@@ -27,6 +27,9 @@ public:
 
 private:
     void acceptor_loop() {
+        if (!acceptor_.is_open())
+            return;
+
         if (!next_conn_) next_conn_ = std::make_shared<server_connection>(io_);
 
         if (next_conn_->socket().is_open()) {
