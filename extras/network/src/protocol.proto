@@ -2,7 +2,24 @@ syntax="proto3";
 
 package xx;
 
-enum SNetCmd {
-    Invalid = 0;
-    Register = 1;
+
+enum SNCmd {
+    SN_CMD_INVALID = 0;
+    SN_CMD_HANDSHAKE = 1;
+    SN_CMD_DATA = 2;
+}
+
+message SNHandshake {
+
+}
+
+message SNData {
+    int32 app_msg_cmd = 1;
+    bytes app_msg_data = 2;
+}
+
+message SNMessage {
+    SNCmd cmd = 1;
+    SNHandshake handshake = 2;
+    SNData data = 3;
 }
