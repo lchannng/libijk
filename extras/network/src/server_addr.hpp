@@ -15,7 +15,7 @@
 
 namespace xx {
 
-// server id like ip address, 172.0.0.1
+// server address like ip address, 172.0.0.1
 class server_addr final {
 public:
     server_addr(uint32_t id) : svr_id(id) {}
