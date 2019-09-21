@@ -18,6 +18,7 @@ namespace xx {
 // server address like ip address, 172.0.0.1
 class server_addr final {
 public:
+    server_addr() : svr_id(0) {}
     server_addr(uint32_t id) : svr_id(id) {}
 
     server_addr(uint8_t c_id, uint8_t z_id, uint8_t t_id,

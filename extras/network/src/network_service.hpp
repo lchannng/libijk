@@ -24,7 +24,6 @@ namespace xx {
 
 class server_connection final : public ijk::base_connection<server_connection> {
     using head_type = uint16_t;
-
 public:
     using ijk::base_connection<server_connection>::base_connection;
     ~server_connection() = default;
