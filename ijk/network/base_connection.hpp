@@ -20,7 +20,8 @@
 namespace ijk {
 
 template <typename Derived>
-class base_connection : public std::enable_shared_from_this<Derived> {
+class base_connection : public std::enable_shared_from_this<Derived>,
+                        private noncopyable {
 public:
     using ptr = std::shared_ptr<Derived>;
     using weak_ptr = std::weak_ptr<Derived>;
