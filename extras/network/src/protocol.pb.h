@@ -75,8 +75,9 @@ namespace xx {
 
 enum SNCmd : int {
   SN_CMD_INVALID = 0,
-  SN_CMD_HANDSHAKE = 1,
-  SN_CMD_DATA = 2,
+  SN_CMD_HANDSHAKE_SYN = 1,
+  SN_CMD_HANDSHAKE_ACK = 2,
+  SN_CMD_DATA = 3,
   SNCmd_INT_MIN_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::min(),
   SNCmd_INT_MAX_SENTINEL_DO_NOT_USE_ = std::numeric_limits<::PROTOBUF_NAMESPACE_ID::int32>::max()
 };
@@ -210,11 +211,18 @@ class SNHandshake :
 
   // accessors -------------------------------------------------------
 
+  // int32 svr_id = 1;
+  void clear_svr_id();
+  static const int kSvrIdFieldNumber = 1;
+  ::PROTOBUF_NAMESPACE_ID::int32 svr_id() const;
+  void set_svr_id(::PROTOBUF_NAMESPACE_ID::int32 value);
+
   // @@protoc_insertion_point(class_scope:xx.SNHandshake)
  private:
   class HasBitSetters;
 
   ::PROTOBUF_NAMESPACE_ID::internal::InternalMetadataWithArena _internal_metadata_;
+  ::PROTOBUF_NAMESPACE_ID::int32 svr_id_;
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   friend struct ::TableStruct_protocol_2eproto;
 };
@@ -513,6 +521,20 @@ class SNMessage :
   #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 #endif  // __GNUC__
 // SNHandshake
+
+// int32 svr_id = 1;
+inline void SNHandshake::clear_svr_id() {
+  svr_id_ = 0;
+}
+inline ::PROTOBUF_NAMESPACE_ID::int32 SNHandshake::svr_id() const {
+  // @@protoc_insertion_point(field_get:xx.SNHandshake.svr_id)
+  return svr_id_;
+}
+inline void SNHandshake::set_svr_id(::PROTOBUF_NAMESPACE_ID::int32 value) {
+  
+  svr_id_ = value;
+  // @@protoc_insertion_point(field_set:xx.SNHandshake.svr_id)
+}
 
 // -------------------------------------------------------------------
 

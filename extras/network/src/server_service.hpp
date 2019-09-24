@@ -16,8 +16,11 @@
 namespace xx {
 class server_service final : public network_service {
 public:
-    server_service(const server_addr &addr, const asio::ip::tcp::endpoint &ep)
-        : saddr_(addr), acceptor_(io_.context(), ep, true) {}
+    server_service(network_service_manager &manager, const server_addr &addr,
+                   const asio::ip::tcp::endpoint &ep)
+        : network_service(manager),
+          saddr_(addr),
+          acceptor_(io_.context(), ep, true) {}
 
     ~server_service() = default;
 

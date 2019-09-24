@@ -33,6 +33,13 @@ class client_service final : public network_service {
 
 public:
     using ptr = std::unique_ptr<client_service>;
+
+    client_service(network_service_manager &manager)
+        : network_service(manager) {}
+
+    ~client_service() = default;
+
+
     void start_client(const server_addr &target_addr,
                       const asio::ip::tcp::endpoint &ep) {
         if (target_servers_.find(target_addr) != target_servers_.end()) {

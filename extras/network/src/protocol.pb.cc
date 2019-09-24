@@ -85,6 +85,7 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_protocol_2eproto::offsets[] PR
   ~0u,  // no _extensions_
   ~0u,  // no _oneof_case_
   ~0u,  // no _weak_field_map_
+  PROTOBUF_FIELD_OFFSET(::xx::SNHandshake, svr_id_),
   ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::xx::SNData, _internal_metadata_),
   ~0u,  // no _extensions_
@@ -103,8 +104,8 @@ const ::PROTOBUF_NAMESPACE_ID::uint32 TableStruct_protocol_2eproto::offsets[] PR
 };
 static const ::PROTOBUF_NAMESPACE_ID::internal::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, sizeof(::xx::SNHandshake)},
-  { 5, -1, sizeof(::xx::SNData)},
-  { 12, -1, sizeof(::xx::SNMessage)},
+  { 6, -1, sizeof(::xx::SNData)},
+  { 13, -1, sizeof(::xx::SNMessage)},
 };
 
 static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] = {
@@ -114,13 +115,14 @@ static ::PROTOBUF_NAMESPACE_ID::Message const * const file_default_instances[] =
 };
 
 const char descriptor_table_protodef_protocol_2eproto[] =
-  "\n\016protocol.proto\022\002xx\"\r\n\013SNHandshake\"3\n\006S"
-  "NData\022\023\n\013app_msg_cmd\030\001 \001(\005\022\024\n\014app_msg_da"
-  "ta\030\002 \001(\014\"a\n\tSNMessage\022\026\n\003cmd\030\001 \001(\0162\t.xx."
-  "SNCmd\022\"\n\thandshake\030\002 \001(\0132\017.xx.SNHandshak"
-  "e\022\030\n\004data\030\003 \001(\0132\n.xx.SNData*B\n\005SNCmd\022\022\n\016"
-  "SN_CMD_INVALID\020\000\022\024\n\020SN_CMD_HANDSHAKE\020\001\022\017"
-  "\n\013SN_CMD_DATA\020\002b\006proto3"
+  "\n\016protocol.proto\022\002xx\"\035\n\013SNHandshake\022\016\n\006s"
+  "vr_id\030\001 \001(\005\"3\n\006SNData\022\023\n\013app_msg_cmd\030\001 \001"
+  "(\005\022\024\n\014app_msg_data\030\002 \001(\014\"a\n\tSNMessage\022\026\n"
+  "\003cmd\030\001 \001(\0162\t.xx.SNCmd\022\"\n\thandshake\030\002 \001(\013"
+  "2\017.xx.SNHandshake\022\030\n\004data\030\003 \001(\0132\n.xx.SND"
+  "ata*`\n\005SNCmd\022\022\n\016SN_CMD_INVALID\020\000\022\030\n\024SN_C"
+  "MD_HANDSHAKE_SYN\020\001\022\030\n\024SN_CMD_HANDSHAKE_A"
+  "CK\020\002\022\017\n\013SN_CMD_DATA\020\003b\006proto3"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_protocol_2eproto_deps[1] = {
 };
@@ -132,7 +134,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_pro
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_protocol_2eproto_once;
 static bool descriptor_table_protocol_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_protocol_2eproto = {
-  &descriptor_table_protocol_2eproto_initialized, descriptor_table_protodef_protocol_2eproto, "protocol.proto", 263,
+  &descriptor_table_protocol_2eproto_initialized, descriptor_table_protodef_protocol_2eproto, "protocol.proto", 309,
   &descriptor_table_protocol_2eproto_once, descriptor_table_protocol_2eproto_sccs, descriptor_table_protocol_2eproto_deps, 3, 0,
   schemas, file_default_instances, TableStruct_protocol_2eproto::offsets,
   file_level_metadata_protocol_2eproto, 3, file_level_enum_descriptors_protocol_2eproto, file_level_service_descriptors_protocol_2eproto,
@@ -150,6 +152,7 @@ bool SNCmd_IsValid(int value) {
     case 0:
     case 1:
     case 2:
+    case 3:
       return true;
     default:
       return false;
@@ -166,6 +169,7 @@ class SNHandshake::HasBitSetters {
 };
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int SNHandshake::kSvrIdFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 SNHandshake::SNHandshake()
@@ -177,10 +181,12 @@ SNHandshake::SNHandshake(const SNHandshake& from)
   : ::PROTOBUF_NAMESPACE_ID::Message(),
       _internal_metadata_(nullptr) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
+  svr_id_ = from.svr_id_;
   // @@protoc_insertion_point(copy_constructor:xx.SNHandshake)
 }
 
 void SNHandshake::SharedCtor() {
+  svr_id_ = 0;
 }
 
 SNHandshake::~SNHandshake() {
@@ -206,6 +212,7 @@ void SNHandshake::Clear() {
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
 
+  svr_id_ = 0;
   _internal_metadata_.Clear();
 }
 
@@ -217,7 +224,15 @@ const char* SNHandshake::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID
     ptr = ::PROTOBUF_NAMESPACE_ID::internal::ReadTag(ptr, &tag);
     CHK_(ptr);
     switch (tag >> 3) {
+      // int32 svr_id = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 8)) {
+          svr_id_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint(&ptr);
+          CHK_(ptr);
+        } else goto handle_unusual;
+        continue;
       default: {
+      handle_unusual:
         if ((tag & 7) == 4 || tag == 0) {
           ctx->SetLastTag(tag);
           goto success;
@@ -245,12 +260,30 @@ bool SNHandshake::MergePartialFromCodedStream(
     ::std::pair<::PROTOBUF_NAMESPACE_ID::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
     tag = p.first;
     if (!p.second) goto handle_unusual;
-  handle_unusual:
-    if (tag == 0) {
-      goto success;
+    switch (::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // int32 svr_id = 1;
+      case 1: {
+        if (static_cast< ::PROTOBUF_NAMESPACE_ID::uint8>(tag) == (8 & 0xFF)) {
+
+          DO_((::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::ReadPrimitive<
+                   ::PROTOBUF_NAMESPACE_ID::int32, ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::TYPE_INT32>(
+                 input, &svr_id_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0) {
+          goto success;
+        }
+        DO_(::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SkipField(
+              input, tag, _internal_metadata_.mutable_unknown_fields()));
+        break;
+      }
     }
-    DO_(::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SkipField(
-          input, tag, _internal_metadata_.mutable_unknown_fields()));
   }
 success:
   // @@protoc_insertion_point(parse_success:xx.SNHandshake)
@@ -268,6 +301,11 @@ void SNHandshake::SerializeWithCachedSizes(
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
+  // int32 svr_id = 1;
+  if (this->svr_id() != 0) {
+    ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32(1, this->svr_id(), output);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SerializeUnknownFields(
         _internal_metadata_.unknown_fields(), output);
@@ -280,6 +318,11 @@ void SNHandshake::SerializeWithCachedSizes(
   // @@protoc_insertion_point(serialize_to_array_start:xx.SNHandshake)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
+
+  // int32 svr_id = 1;
+  if (this->svr_id() != 0) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->svr_id(), target);
+  }
 
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormat::SerializeUnknownFieldsToArray(
@@ -301,6 +344,13 @@ size_t SNHandshake::ByteSizeLong() const {
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   // Prevent compiler warnings about cached_has_bits being unused
   (void) cached_has_bits;
+
+  // int32 svr_id = 1;
+  if (this->svr_id() != 0) {
+    total_size += 1 +
+      ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
+        this->svr_id());
+  }
 
   int cached_size = ::PROTOBUF_NAMESPACE_ID::internal::ToCachedSize(total_size);
   SetCachedSize(cached_size);
@@ -329,6 +379,9 @@ void SNHandshake::MergeFrom(const SNHandshake& from) {
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
   (void) cached_has_bits;
 
+  if (from.svr_id() != 0) {
+    set_svr_id(from.svr_id());
+  }
 }
 
 void SNHandshake::CopyFrom(const ::PROTOBUF_NAMESPACE_ID::Message& from) {
@@ -356,6 +409,7 @@ void SNHandshake::Swap(SNHandshake* other) {
 void SNHandshake::InternalSwap(SNHandshake* other) {
   using std::swap;
   _internal_metadata_.Swap(&other->_internal_metadata_);
+  swap(svr_id_, other->svr_id_);
 }
 
 ::PROTOBUF_NAMESPACE_ID::Metadata SNHandshake::GetMetadata() const {

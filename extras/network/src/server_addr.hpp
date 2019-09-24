@@ -21,12 +21,10 @@ public:
     server_addr() : svr_id(0) {}
     server_addr(uint32_t id) : svr_id(id) {}
 
-    server_addr(uint8_t c_id, uint8_t z_id, uint8_t t_id,
-              uint8_t i_id)
-        : channel_id(c_id),
-          zone_id(z_id),
-          type_id(t_id),
-          inst_id(i_id) {}
+    server_addr(uint8_t c_id, uint8_t z_id, uint8_t t_id, uint8_t i_id)
+        : channel_id(c_id), zone_id(z_id), type_id(t_id), inst_id(i_id) {}
+
+    bool is_null() const { return 0 == svr_id; }
 
     std::string to_string() const {
         return fmt::format("{}.{}.{}.{}", channel_id, zone_id, type_id,

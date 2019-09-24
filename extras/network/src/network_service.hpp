@@ -27,6 +27,7 @@ class server_connection final : public ijk::base_connection<server_connection> {
 public:
     using ijk::base_connection<server_connection>::base_connection;
     ~server_connection() = default;
+
     void run() {
         message_loop(shared_from_this());
     }
@@ -84,9 +85,11 @@ private:
             });
     }
 
-    void send_handshake() {
+    void send_handshake(bool is_reply) {
         SNMessage msg;
-        msg.set_cmd(SNCmd::SN_CMD_HANDSHAKE);
+        msg.set_cmd(is_reply ? SNCmd::SN_CMD_HANDSHAKE_ACK
+                             : SNCmd::SN_CMD_HANDSHAKE_SYN);
+        msg.mutable_handshake()->set_svr_id(0);
         send_message(msg);
     }
 
@@ -101,10 +104,34 @@ private:
 
     void process(const SNMessage &msg) {
         switch (msg.cmd()) {
-            case ::xx::SN_CMD_HANDSHAKE: {
+            case SNCmd::SN_CMD_HANDSHAKE_SYN:
+            case SNCmd::SN_CMD_HANDSHAKE_ACK: {
+                if (!msg.has_handshake()) {
+                    LOG_ERROR("invalid handshake message");
+                    close();
+                    return;
+                } 
+
+                target_addr_ = server_addr(msg.handshake().svr_id());
+                if (target_addr_.is_null()) {
+                    LOG_ERROR("invalid server address");
+                    close();
+                    return;
+                }
+
+                if (msg.cmd() == SN_CMD_HANDSHAKE_SYN) {
+                    send_handshake(true);
+                }
             } break;
-            case ::xx::SN_CMD_DATA:
-                break;
+            case SNCmd::SN_CMD_DATA: {
+                if (target_addr_.is_null()) {
+                    LOG_ERROR("handshake first");
+                    close();
+                    return;
+                }
+            
+            }
+            break;
             default:
                 break;
         }
@@ -118,7 +145,7 @@ private:
 
 class network_service_manager : private ijk::noncopyable {
 public:
-    network_service_manager() = default;
+    network_service_manager(const server_addr &addr) : my_svr_addr_(addr) {}
 
     virtual ~network_service_manager() = default;
 
@@ -132,6 +159,10 @@ public:
 
     }
 
+    server_connection::ptr get_connection(const server_addr& target_addr) {
+        return nullptr;
+    }
+
     const server_addr &svr_addr() { return my_svr_addr_; }
 
 protected:
@@ -140,14 +171,14 @@ protected:
 
 class network_service : private ijk::noncopyable {
 public:
-    // network_service(network_service_manager &manager) : manager_(manager) {}
-    network_service() = default;
+    network_service(network_service_manager &manager) : manager_(manager) {}
     virtual ~network_service() = default;
     size_t poll() { return io_.poll(); }
+    network_service_manager &manager() { return manager_; }
 
 protected:
     ijk::io_t io_;
-    // network_service_manager &manager_;
+    network_service_manager &manager_;
 };
 }  // namespace xx
 

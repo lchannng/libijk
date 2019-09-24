@@ -18,16 +18,17 @@
 
 namespace xx {
 
-class server_network final {
+class server_network final : public network_service_manager {
 public:
-    server_network(const server_addr &my_svr_addr) : my_svr_addr_(my_svr_addr) {} 
+    server_network(const server_addr &my_svr_addr)
+        : network_service_manager(my_svr_addr) {} 
 
     ~server_network() {}
 
     void start_client(const server_addr &target_addr, const asio::ip::tcp::endpoint &ep) {
         auto iter = client_services_.find(target_addr.type_id);
         if (iter == client_services_.end()) {
-            auto res = client_services_.emplace(target_addr.type_id, std::make_unique<client_service>()); 
+            auto res = client_services_.emplace(target_addr.type_id, std::make_unique<client_service>(*this)); 
             Ensures(res.second);
             iter = res.first;
         }
@@ -36,7 +37,7 @@ public:
 
     void start_server(const asio::ip::tcp::endpoint &ep) {
         Ensures(server_service_ == nullptr);
-        server_service_ = std::make_unique<server_service>(my_svr_addr_, ep);
+        server_service_ = std::make_unique<server_service>(*this, my_svr_addr_, ep);
         server_service_->start_server();
     }
 
@@ -50,7 +51,6 @@ public:
     }
 
 private:
-    server_addr my_svr_addr_;
     std::map<uint8_t, client_service::ptr> client_services_;
     std::unique_ptr<server_service> server_service_;
 };

@@ -5,12 +5,13 @@ package xx;
 
 enum SNCmd {
     SN_CMD_INVALID = 0;
-    SN_CMD_HANDSHAKE = 1;
-    SN_CMD_DATA = 2;
+    SN_CMD_HANDSHAKE_SYN = 1;
+    SN_CMD_HANDSHAKE_ACK = 2;
+    SN_CMD_DATA = 3;
 }
 
 message SNHandshake {
-
+    int32 svr_id = 1;
 }
 
 message SNData {
