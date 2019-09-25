@@ -22,6 +22,33 @@ namespace ijk {
 template <typename Derived>
 class base_connection : public std::enable_shared_from_this<Derived>,
                         private noncopyable {
+
+    template <class BufferSequence>
+    class buffers_ref {
+        BufferSequence const &buffers_;
+
+    public:
+        using value_type = typename BufferSequence::value_type;
+
+        using const_iterator = typename BufferSequence::const_iterator;
+
+        buffers_ref(buffers_ref const &) = default;
+
+        explicit buffers_ref(BufferSequence const &buffers)
+            : buffers_(buffers) {}
+
+        const_iterator begin() const { return buffers_.begin(); }
+
+        const_iterator end() const { return buffers_.end(); }
+    };
+
+    // Return a reference to a buffer sequence
+    template <class BufferSequence>
+    buffers_ref<BufferSequence> make_buffers_ref(
+        BufferSequence const &buffers) {
+        return buffers_ref<BufferSequence>(buffers);
+    }
+
 public:
     using ptr = std::shared_ptr<Derived>;
     using weak_ptr = std::weak_ptr<Derived>;
@@ -142,9 +169,7 @@ protected:
 
     inline size_t invoke_message_cb(const ptr &self,
                                     const std::string_view &buf) {
-        if (message_cb_) {
-            return message_cb_(self, buf);
-        }
+        if (message_cb_) return message_cb_(self, buf);
         return buf.size();
     }
 
@@ -193,7 +218,7 @@ private:
                 asio::buffer(data.data(), data.size()));
         }
 
-        asio::async_write(socket_, sending_buffers_,
+        asio::async_write(socket_, make_buffers_ref(sending_buffers_),
                           [this, self = shared_from_this()](auto &ec, auto) {
                               if (ec) {
                                   invoke_close_cb(self, ec);
