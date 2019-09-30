@@ -16,6 +16,7 @@
 #include "base/fmt.h"
 #include "base/function_traits.hpp"
 #include "base/gsl.h"
+#include "base/hash.hpp"
 #include "base/id_generator.h"
 #include "base/ignore_unused.hpp"
 #include "base/mpmc_blocking_q.hpp"
