@@ -17,12 +17,11 @@
 
 namespace ijk {
 
-namespace details {
 class Logging final {
 public:
     ~Logging() = default;
 
-    static Logging& instance() {
+    static Logging &instance() {
         static Logging log;
         return log;
     }
@@ -37,24 +36,21 @@ public:
 
 private:
     Logging() = default;
-    Logging(const Logging&) = delete;
+    Logging(const Logging &) = delete;
     Logging &operator=(const Logging &) = delete;
 
 private:
     std::shared_ptr<spdlog::logger> _default_logger;
 };
 
-}
+#define IJK_INITIALIZE_LOGGING() ijk::Logging::instance().initialize()
 
-#define IJK_INITIALIZE_LOGGING() ijk::details::Logging::instance().initialize()
+#define IJK_LOG_MESSAGE(level, ...) \
+    SPDLOG_LOGGER_CALL(ijk::Logging::instance().logger(), level, __VA_ARGS__)
 
-#define IJK_LOG_MESSAGE(level, ...)                                  \
-    SPDLOG_LOGGER_CALL(ijk::details::Logging::instance().logger(), level, \
-                       __VA_ARGS__)
-
-#define IJK_LOG_MESSAGE_IF(boolean_expression, level, ...)            \
-    if (boolean_expression) \
-        SPDLOG_LOGGER_CALL(ijk::details::Log::instance().logger(), level, __VA_ARGS__)
+#define IJK_LOG_MESSAGE_IF(boolean_expression, level, ...) \
+    if (boolean_expression)                                \
+    SPDLOG_LOGGER_CALL(ijk::Log::instance().logger(), level, __VA_ARGS__)
 
 #define LOG_DEBUG(...) IJK_LOG_MESSAGE(spdlog::level::debug, __VA_ARGS__)
 
@@ -72,9 +68,8 @@ private:
 #define LOG_INFO_IF(boolean_expression, ...) \
     IJK_LOG_MESSAGE_IF((boolean_expression), spdlog::level::info, __VA_ARGS__)
 
-#define LOG_WARN_IF(boolean_expression, ...)                          \
-    IJK_LOG_MESSAGE_IF((boolean_expression), spdlog::level::warn, \
-                       __VA_ARGS__)
+#define LOG_WARN_IF(boolean_expression, ...) \
+    IJK_LOG_MESSAGE_IF((boolean_expression), spdlog::level::warn, __VA_ARGS__)
 
 #define LOG_ERROR_IF(boolean_expression, ...) \
     IJK_LOG_MESSAGE_IF((boolean_expression), spdlog::level::err, __VA_ARGS__)
