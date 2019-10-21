@@ -169,17 +169,6 @@ protected:
     server_addr my_svr_addr_;
 };
 
-class network_service : private ijk::noncopyable {
-public:
-    network_service(network_service_manager &manager) : manager_(manager) {}
-    virtual ~network_service() = default;
-    size_t poll() { return io_.poll(); }
-    network_service_manager &manager() { return manager_; }
-
-protected:
-    ijk::io_t io_;
-    network_service_manager &manager_;
-};
 }  // namespace xx
 
 #endif /* end of include guard: NETWORK_SERVICE_HPP_T4QDJUSG */

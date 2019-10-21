@@ -14,19 +14,19 @@
 #include "ijk/network/io.hpp"
 
 namespace xx {
-class server_service final : public network_service {
+class server_service final {
 public:
-    server_service(network_service_manager &manager, const server_addr &addr,
+    server_service(network_service_manager &manager,
                    const asio::ip::tcp::endpoint &ep)
-        : network_service(manager),
-          saddr_(addr),
-          acceptor_(io_.context(), ep, true) {}
+        : manager_(manager), acceptor_(io_.context(), ep, true) {}
 
     ~server_service() = default;
 
     void start_server() {
         acceptor_loop();
     }
+
+    size_t poll() { return io_.poll(); }
 
 private:
     void acceptor_loop() {
@@ -59,7 +59,8 @@ private:
     } 
 
 private:
-    server_addr saddr_;
+    ijk::io_t io_;
+    network_service_manager &manager_;
     asio::ip::tcp::acceptor acceptor_;
     server_connection::ptr next_conn_;
 };

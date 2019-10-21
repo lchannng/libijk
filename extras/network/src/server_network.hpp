@@ -37,7 +37,7 @@ public:
 
     void start_server(const asio::ip::tcp::endpoint &ep) {
         Ensures(server_service_ == nullptr);
-        server_service_ = std::make_unique<server_service>(*this, my_svr_addr_, ep);
+        server_service_ = std::make_unique<server_service>(*this, ep);
         server_service_->start_server();
     }
 

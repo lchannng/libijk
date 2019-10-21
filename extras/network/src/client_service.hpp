@@ -19,7 +19,7 @@
 
 namespace xx {
 
-class client_service final : public network_service {
+class client_service final {
     struct server_connector final {
     public:
         using ptr = std::unique_ptr<server_connector>;
@@ -34,11 +34,9 @@ class client_service final : public network_service {
 public:
     using ptr = std::unique_ptr<client_service>;
 
-    client_service(network_service_manager &manager)
-        : network_service(manager) {}
+    client_service(network_service_manager &manager) : manager_(manager) {}
 
     ~client_service() = default;
-
 
     void start_client(const server_addr &target_addr,
                       const asio::ip::tcp::endpoint &ep) {
@@ -51,6 +49,8 @@ public:
         connect_server(s.get());
         target_servers_.emplace(target_addr, std::move(s));
     }
+
+    size_t poll() { return io_.poll(); }
 
 private:
     void connect_server(server_connector *s) {
@@ -95,6 +95,8 @@ private:
     }
 
 private:
+    ijk::io_t io_;
+    network_service_manager &manager_;
     std::map<server_addr, server_connector::ptr> target_servers_;
 };
 }  // namespace xx
