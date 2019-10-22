@@ -146,7 +146,7 @@ public:
 
     Derived &on_close(close_callback &&cb) {
         // Expects(io_.running_in_this_thread());
-        close_cb_ = std::forward<close_callback>(cb);
+        close_cb_list_.emplace_back(std::forward<close_callback>(cb));
         return *static_cast<Derived *>(this);
     }
 
@@ -157,8 +157,12 @@ protected:
         assert(io_.running_in_this_thread());
         closing_ = false;
         closed_ = true;
-        if (close_cb_) close_cb_(self, ec);
-        close_cb_ = nullptr;
+        if (!close_cb_list_.empty()) {
+            for (auto &&cb : close_cb_list_) {
+                cb(self, ec);
+            }
+            close_cb_list_.clear();
+        }
         message_cb_ = nullptr;
         if (socket_.is_open()) {
             asio::error_code ignored_ec;
@@ -241,7 +245,7 @@ private:
     std::list<std::string> sending_queue_;
     std::vector<asio::const_buffer> sending_buffers_;
     message_callback message_cb_;
-    close_callback close_cb_;
+    std::list<close_callback> close_cb_list_;
     bool closing_;
     bool closed_;
 };

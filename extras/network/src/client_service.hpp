@@ -67,7 +67,7 @@ private:
                 }
             });
 
-        LOG_INFO("connecting to server: {}, ep: {}", s->target_addr.to_string(), s->endpoint);
+        // LOG_INFO("connecting to server: {}, ep: {}", s->target_addr.to_string(), s->endpoint);
     }
 
     void on_connected_to_server(server_connector *s,

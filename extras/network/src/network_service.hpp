@@ -22,7 +22,33 @@
 
 namespace xx {
 
-class network_service_manager;
+class server_connection;
+
+class network_service_manager : private ijk::noncopyable {
+public:
+    network_service_manager(const server_addr &addr) : my_svr_addr_(addr) {}
+
+    virtual ~network_service_manager() = default;
+
+    bool add_connection(const server_addr& target_addr,
+        server_connection *conn) {
+        return false;
+    }
+
+    void remove_connection(const server_addr& target_addr,
+        server_connection *conn) {
+
+    }
+
+    server_connection *get_connection(const server_addr& target_addr) {
+        return nullptr;
+    }
+
+    const server_addr &svr_addr() { return my_svr_addr_; }
+
+protected:
+    server_addr my_svr_addr_;
+};
 
 class server_connection final : public ijk::base_connection<server_connection> {
     using head_type = uint16_t;
@@ -100,7 +126,7 @@ private:
         SNMessage msg;
         msg.set_cmd(is_reply ? SNCmd::SN_CMD_HANDSHAKE_ACK
                              : SNCmd::SN_CMD_HANDSHAKE_SYN);
-        msg.mutable_handshake()->set_svr_id(0);
+        msg.mutable_handshake()->set_svr_id(manager_->svr_addr().svr_id);
         send_message(msg);
     }
 
@@ -140,6 +166,13 @@ private:
                         return;
                     }
                 }
+
+                if (manager_->add_connection(target_addr_, this)) {
+                    auto self = shared_from_this();
+                    on_close([self, this](auto &, auto) {
+                        manager_->remove_connection(target_addr_, this);
+                    });
+                }
             } break;
             case SNCmd::SN_CMD_DATA: {
                 if (target_addr_.is_null()) {
@@ -161,33 +194,6 @@ private:
     server_addr target_addr_;
     network_service_manager *manager_{nullptr};
 };
-
-class network_service_manager : private ijk::noncopyable {
-public:
-    network_service_manager(const server_addr &addr) : my_svr_addr_(addr) {}
-
-    virtual ~network_service_manager() = default;
-
-    void add_connection(const server_addr& target_addr,
-        const server_connection::ptr& conn) {
-
-    }
-
-    void remove_connection(const server_addr& target_addr,
-        const server_connection::ptr& conn) {
-
-    }
-
-    const server_connection::ptr &get_connection(const server_addr& target_addr) {
-        return nullptr;
-    }
-
-    const server_addr &svr_addr() { return my_svr_addr_; }
-
-protected:
-    server_addr my_svr_addr_;
-};
-
 }  // namespace xx
 
 #endif /* end of include guard: NETWORK_SERVICE_HPP_T4QDJUSG */

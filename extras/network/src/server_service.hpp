@@ -56,6 +56,7 @@ private:
 
     void handle_connection(server_connection::ptr conn) {
         LOG_INFO("accept connection from {}", conn->remote_address());
+        conn->run_on_server_side(manager_);
     } 
 
 private:

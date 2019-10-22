@@ -45,7 +45,8 @@ public:
 
     size_t poll() {
         size_t count = 0;
-        count += server_service_->poll();
+        if (server_service_)
+            count += server_service_->poll();
         for (auto& client : client_services_) {
             count += client.second->poll();
         }
