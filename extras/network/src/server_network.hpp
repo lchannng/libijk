@@ -26,6 +26,8 @@ public:
     ~server_network() {}
 
     void start_client(const server_addr &target_addr, const asio::ip::tcp::endpoint &ep) {
+        Expects(target_addr != my_svr_addr_);
+
         auto iter = client_services_.find(target_addr.type_id);
         if (iter == client_services_.end()) {
             auto res = client_services_.emplace(target_addr.type_id, std::make_unique<client_service>(*this)); 

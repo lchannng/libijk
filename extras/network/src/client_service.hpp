@@ -81,8 +81,7 @@ private:
                 s->conn.reset();
                 reconnect(s);
             })
-            .on_message([this, s](auto &conn, auto &data) { return data.size(); })
-            .run();
+            .run_on_client_side(manager_, s->target_addr);
 
         LOG_INFO("connected to server: {}, ep: {}", s->target_addr.to_string(), s->endpoint);
     }

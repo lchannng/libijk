@@ -32,6 +32,8 @@ public:
     }
 
     bool operator<(const server_addr &rhs) const { return svr_id < rhs.svr_id; }
+    bool operator==(const server_addr &rhs) const { return svr_id == rhs.svr_id; }
+    bool operator!=(const server_addr &rhs) const { return svr_id != rhs.svr_id; }
 
     union {
         uint32_t svr_id;

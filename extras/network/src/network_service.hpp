@@ -22,13 +22,24 @@
 
 namespace xx {
 
+class network_service_manager;
+
 class server_connection final : public ijk::base_connection<server_connection> {
     using head_type = uint16_t;
 public:
     using ijk::base_connection<server_connection>::base_connection;
     ~server_connection() = default;
 
-    void run() {
+    void run_on_client_side(network_service_manager &manager, const server_addr &target_addr) {
+        Expects(!target_addr.is_null());
+        manager_ = &manager;
+        message_loop(shared_from_this());
+        target_addr_ = target_addr;
+        send_handshake();
+    }
+
+    void run_on_server_side(network_service_manager &manager) {
+        manager_ = &manager;
         message_loop(shared_from_this());
     }
 
@@ -85,7 +96,7 @@ private:
             });
     }
 
-    void send_handshake(bool is_reply) {
+    void send_handshake(bool is_reply = false) {
         SNMessage msg;
         msg.set_cmd(is_reply ? SNCmd::SN_CMD_HANDSHAKE_ACK
                              : SNCmd::SN_CMD_HANDSHAKE_SYN);
@@ -112,15 +123,22 @@ private:
                     return;
                 } 
 
-                target_addr_ = server_addr(msg.handshake().svr_id());
-                if (target_addr_.is_null()) {
-                    LOG_ERROR("invalid server address");
-                    close();
-                    return;
-                }
+                auto addr = server_addr(msg.handshake().svr_id());
 
                 if (msg.cmd() == SN_CMD_HANDSHAKE_SYN) {
+                    target_addr_ = addr;
+                    if (target_addr_.is_null()) {
+                        LOG_ERROR("invalid server address");
+                        close();
+                        return;
+                    }
                     send_handshake(true);
+                } else {
+                    if (addr != target_addr_) {
+                        LOG_ERROR("invalid server address");
+                        close();
+                        return;
+                    }
                 }
             } break;
             case SNCmd::SN_CMD_DATA: {
@@ -141,6 +159,7 @@ private:
     head_type head_;
     ijk::buffer buf_;
     server_addr target_addr_;
+    network_service_manager *manager_{nullptr};
 };
 
 class network_service_manager : private ijk::noncopyable {
@@ -159,7 +178,7 @@ public:
 
     }
 
-    server_connection::ptr get_connection(const server_addr& target_addr) {
+    const server_connection::ptr &get_connection(const server_addr& target_addr) {
         return nullptr;
     }
 
