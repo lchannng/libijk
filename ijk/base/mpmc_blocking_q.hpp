@@ -31,7 +31,7 @@ class mpmc_blocking_q {
 public:
     using container_type = std::deque<T>;
 
-    mpmc_blocking_q() {}
+    mpmc_blocking_q() : shutdown_(false) {}
 
     void push(T item) {
         {
@@ -44,7 +44,7 @@ public:
     /// \return immediately, with true if successful retrieval
     bool pop_nowait(T &popped_item) {
         std::lock_guard<std::mutex> lock(m_);
-        if (queue_.empty()) {
+        if (queue_.empty() || shutdown_) {
             return false;
         }
         popped_item = std::move(queue_.front());
@@ -54,10 +54,15 @@ public:
 
     bool try_pop(T &popped_item, std::chrono::milliseconds timeout) {
         std::unique_lock<std::mutex> lock(m_);
-        if (!data_cond_.wait_for(lock, timeout,
-                                 [this] { return !this->queue_.empty(); })) {
+        if (!data_cond_.wait_for(lock, timeout, [this] {
+                return !queue_.empty() || shutdown_;
+            })) {
             return false;
         }
+
+        if (queue_.empty() || shutdown_)
+            return false;
+
         popped_item = std::move(queue_.front());
         queue_.pop_front();
         return true;
@@ -67,11 +72,15 @@ public:
     /// again
     void wait_and_pop(T &popped_item) {
         std::unique_lock<std::mutex> lock(m_);
-        while (queue_.empty()) {
+        while (queue_.empty() && !shutdown_) {
             data_cond_.wait(lock);
             //  This 'while' loop is equal to
             //  data_cond_.wait(lock, [](bool result){return !queue_.empty();});
         }
+
+        if (queue_.empty() || shutdown_)
+            return;
+
         popped_item = std::move(queue_.front());
         queue_.pop_front();
     }
@@ -94,10 +103,21 @@ public:
         return true;
     }
 
+    void shutdown() {
+        std::lock_guard<std::mutex> lock(m_);
+        while (!queue_.empty()) {
+            queue_.pop_front();
+        }
+
+        shutdown_ = true;
+        data_cond_.notify_all();
+    }
+
 private:
     container_type queue_;
     mutable std::mutex m_;
     std::condition_variable data_cond_;
+    std::atomic<bool> shutdown_;
 
     mpmc_blocking_q &operator=(const mpmc_blocking_q &) = delete;
     mpmc_blocking_q(const mpmc_blocking_q &other) = delete;
