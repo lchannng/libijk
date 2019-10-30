@@ -459,8 +459,9 @@ private:
             std::string mvar = metavar();
             if (mvar.empty()) {
                 mvar = type();
-                std::transform(mvar.begin(), mvar.end(), mvar.begin(),
-                               ::toupper);
+                std::transform(
+                    mvar.begin(), mvar.end(), mvar.begin(),
+                    [](char c) { return static_cast<char>(std::toupper(c)); });
             }
             mvar_short = " " + mvar;
             mvar_long = "=" + mvar;
@@ -708,7 +709,9 @@ public:
 
     void set_usage(const std::string &u) {
         std::string lower = u;
-        std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+        std::transform(lower.begin(), lower.end(), lower.begin(), [](char c) {
+            return static_cast<char>(std::tolower(c));
+        });
         if (lower.compare(0, 7, "usage: ") == 0) {
             _usage = u.substr(7);
         } else {
