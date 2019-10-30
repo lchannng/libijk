@@ -1,5 +1,6 @@
 build*/
 _build*
+_install
 *.dir
 Win32
 *.user

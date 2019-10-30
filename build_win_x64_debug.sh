@@ -4,7 +4,7 @@
 # mail: fn.stanc@gmail.com
 # Created Time: 2018/10/29 11:10:11
 
-install_dir="`pwd`/../lib"
+install_dir="`pwd`/_install"
 
 mkdir -p ./_build/win_x64_debug
 cd ./_build/win_x64_debug
