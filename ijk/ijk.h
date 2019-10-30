@@ -1,6 +1,6 @@
 /*
- * File Name: libijk.h
- * Author: Stan.Lch
+ * File Name: ijk.h
+ * Author: Lch
  * Mail: fn.stanc@gmail.com
  * Created Time: 2018/11/03 14:45:10
  */

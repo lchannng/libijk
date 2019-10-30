@@ -125,7 +125,6 @@ inline void ReadFile(SequentialFile::Ptr &file, std::string &out,
     out.clear();
     char buf[8192];
     std::string_view fragment;
-    std::error_code ec;
     while (true) {
         file->Read(sizeof(buf), buf, fragment, ec);
         if (ec) {
@@ -178,7 +177,6 @@ inline std::string FileUtils::ReadAllText(const std::string &fname,
         return std::string();
     }
     std::string res;
-    std::error_code ec;
     details::ReadFile(seq_file, res, ec);
     return res;
 }
@@ -191,7 +189,6 @@ inline std::string FileUtils::ReadAllBytes(const std::string &fname,
         return std::string();
     }
     std::string res;
-    std::error_code ec;
     details::ReadFile(seq_file, res, ec);
     return res;
 }

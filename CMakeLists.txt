@@ -104,8 +104,9 @@ auto_install_files(ijk "${IJK_SRC_ROOT}" ${IJK_HDRS})
 #
 # for ide
 #
-auto_source_group(ijk ${IJK_SRC_ROOT} ${IJK_HDRS})
-add_custom_target(ijk_for_ide SOURCES ${IJK_HDRS})
+auto_source_group(ijk ${IJK_SRC_ROOT} ${IJK_HDRS} ${IJK_SRC_ROOT}/src.cc)
+add_library(ijk_ STATIC ${IJK_HDRS} ${IJK_SRC_ROOT}/src.cc)
+target_link_libraries(ijk_ ${DEP_LIBS})
 
 
 #
