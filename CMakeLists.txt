@@ -8,6 +8,11 @@ option(BUILD_TESTS "Build unittests" OFF)
 option(BUILD_SAMPLES "Build samples" OFF)
 option(USE_BOOST_ASIO "Use boost asio instead of asio standalone" OFF)
 
+if (NOT DEPS_ROOT)
+    set(DEPS_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/deps)
+endif()
+
+
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
     set(CMAKE_INSTALL_BINDIR "bin" CACHE STRING "User executables (bin)")
     set(CMAKE_INSTALL_LIBDIR "lib${LIB_SUFFIX}" CACHE STRING "Object code libraries (lib)")
@@ -74,7 +79,7 @@ endif()
 #
 # include deps
 #
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps)
+add_subdirectory(${DEPS_ROOT})
 
 list(APPEND DEP_LIBS asio spdlog)
 
