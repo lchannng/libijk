@@ -9,5 +9,5 @@ file(GLOB_RECURSE TESTS_SRCS
 
 auto_source_group(tests ${TESTS_ROOT} ${TESTS_SRCS})
 
-ijk_add_executable(ijk-tests "unittests" ${TESTS_SRCS})
+utils_add_executable(ijk-tests "unittests" ${TESTS_SRCS})
 target_link_libraries(ijk-tests ijk catch2)

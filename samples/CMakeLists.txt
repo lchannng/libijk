@@ -1,7 +1,7 @@
 set(SAMPLES_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
 macro(add_sample target_name)
-    ijk_add_executable(${target_name} "samples" ${ARGN})
+    utils_add_executable(${target_name} "samples" ${ARGN})
     target_link_libraries(${target_name} ijk)
 endmacro(add_sample name)
 
