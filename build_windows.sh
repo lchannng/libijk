@@ -8,4 +8,8 @@ install_dir="`pwd`/_install"
 
 mkdir -p ./_build/windows
 cd ./_build/windows
-cmake -Wno-dev -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_INSTALL_PREFIX=${install_dir} ../..
+cmake -Wno-dev -A x64 -DCMAKE_BUILD_TYPE=Debug \
+    -DBUILD_TESTS=ON \
+    -DBUILD_SAMPLES=ON \
+    -DCMAKE_TOOLCHAIN_FILE=E:/vcpkg/scripts/buildsystems/vcpkg.cmake \
+    -DCMAKE_INSTALL_PREFIX=${install_dir} ../..

@@ -8,4 +8,7 @@ install_dir="`pwd`/_install"
 
 mkdir -p ./_build/unix
 cd ./_build/unix
-cmake -A x64 -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=${install_dir} ../..
+cmake -A x64 -DCMAKE_BUILD_TYPE=Debug \
+    -DBUILD_TESTS=ON \
+    -DBUILD_SAMPLES=ON \
+    -DCMAKE_INSTALL_PREFIX=${install_dir} ../..

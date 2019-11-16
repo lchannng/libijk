@@ -4,9 +4,8 @@ cmake_minimum_required (VERSION 2.8)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-option(BUILD_TESTS "Build unittests" ON)
-option(BUILD_SAMPLES "Build samples" ON)
-option(BUILD_EXTRAS "Build extra libraries" ON)
+option(BUILD_TESTS "Build unittests" OFF)
+option(BUILD_SAMPLES "Build samples" OFF)
 option(USE_BOOST_ASIO "Use boost asio instead of asio standalone" OFF)
 
 if (CMAKE_VERSION VERSION_LESS 2.8.5)
@@ -24,8 +23,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 find_package(Threads REQUIRED)
 
@@ -123,10 +120,6 @@ endif()
 #
 if (BUILD_SAMPLES)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/samples)
-endif()
-
-if (BUILD_EXTRAS)
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/extras)
 endif()
 
 message(STATUS "")
