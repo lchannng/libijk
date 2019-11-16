@@ -25,9 +25,7 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-#include("${CMAKE_CURRENT_SOURCE_DIR}/configure.cmake")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/utils.cmake")
 
 find_package(Threads REQUIRED)
 
@@ -76,6 +74,9 @@ else()
     set(DEP_LIBS ${CMAKE_THREAD_LIBS_INIT})
 endif()
 
+#
+# include deps
+#
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps)
 
 list(APPEND DEP_LIBS asio spdlog)

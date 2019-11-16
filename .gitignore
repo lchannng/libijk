@@ -4,6 +4,6 @@ _install
 *.dir
 Win32
 *.user
-3rd/deps
+deps
 .idea
 cmake-build*
