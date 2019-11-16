@@ -1,5 +1,3 @@
-find_package(Catch2 CONFIG REQUIRED)
-
 set(TESTS_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
 
 file(GLOB_RECURSE TESTS_SRCS
@@ -12,4 +10,4 @@ file(GLOB_RECURSE TESTS_SRCS
 auto_source_group(tests ${TESTS_ROOT} ${TESTS_SRCS})
 
 ijk_add_executable(ijk-tests "unittests" ${TESTS_SRCS})
-target_link_libraries(ijk-tests ijk Catch2::Catch2)
+target_link_libraries(ijk-tests ijk catch2)
