@@ -34,7 +34,7 @@ public:
 
 }  // namespace details
 
-future<void> accept(asio::ip::tcp::acceptor &acceptor,
+inline future<void> accept(asio::ip::tcp::acceptor &acceptor,
                     asio::ip::tcp::socket &socket) {
     Expects(!socket.is_open());
     promise<void> pm;
@@ -50,7 +50,7 @@ future<void> accept(asio::ip::tcp::acceptor &acceptor,
 }
 
 template <typename Connection>
-future<std::shared_ptr<Connection>> accept(asio::ip::tcp::acceptor &acceptor,
+inline future<std::shared_ptr<Connection>> accept(asio::ip::tcp::acceptor &acceptor,
                                            io_t &io) {
     promise<std::shared_ptr<Connection>> pm;
     auto fut = pm.get_future();
@@ -68,7 +68,7 @@ future<std::shared_ptr<Connection>> accept(asio::ip::tcp::acceptor &acceptor,
 template <typename Connection,
           typename std::enable_if<
               details::is_connection_type<Connection>::value>::type * = nullptr>
-future<std::shared_ptr<Connection>> dial(io_t &io,
+inline future<std::shared_ptr<Connection>> dial(io_t &io,
                                          const asio::ip::tcp::endpoint &ep) {
     static_assert(details::is_connection_type<Connection>::value, "not conn!!!");
     promise<std::shared_ptr<Connection>> pm;
@@ -90,7 +90,7 @@ future<std::shared_ptr<Connection>> dial(io_t &io,
 template <typename Connection,
           typename std::enable_if<
               details::is_connection_type<Connection>::value>::type * = nullptr>
-future<std::shared_ptr<Connection>> dial(io_t &io, const std::string &host,
+inline future<std::shared_ptr<Connection>> dial(io_t &io, const std::string &host,
                                          int port) {
     asio::error_code ec;
     auto addr = asio::ip::make_address(host, ec);
@@ -131,7 +131,7 @@ future<std::shared_ptr<Connection>> dial(io_t &io, const std::string &host,
     });
 }
 
-future<size_t> read_some(asio::ip::tcp::socket &socket,
+inline future<size_t> read_some(asio::ip::tcp::socket &socket,
                          const asio::mutable_buffer &buf) {
     promise<size_t> pm;
     auto fut = pm.get_future();
@@ -156,7 +156,7 @@ future<size_t> read_some(asio::ip::tcp::socket &socket,
     return fut;
 }
 
-future<size_t> read_exactly(asio::ip::tcp::socket &socket,
+inline future<size_t> read_exactly(asio::ip::tcp::socket &socket,
                             const asio::mutable_buffer &buf) {
     promise<size_t> pm;
     auto fut = pm.get_future();
@@ -182,7 +182,7 @@ future<size_t> read_exactly(asio::ip::tcp::socket &socket,
     return fut;
 }
 
-future<void> delay(io_t &io, const std::chrono::nanoseconds &ns) {
+inline future<void> delay(io_t &io, const std::chrono::nanoseconds &ns) {
     promise<void> pm;
     auto fut = pm.get_future();
 
@@ -197,7 +197,7 @@ future<void> delay(io_t &io, const std::chrono::nanoseconds &ns) {
     return fut;
 }
 
-future<void> delay(asio::steady_timer &timer,
+inline future<void> delay(asio::steady_timer &timer,
                    const std::chrono::nanoseconds &ns) {
     using storage_type = future<void>::storage_type;
     detail::Storage_ptr<storage_type> storage;
@@ -213,7 +213,7 @@ future<void> delay(asio::steady_timer &timer,
     return storage_type::future_type{storage};
 }
 
-future<int> wait_signal(io_t &io, std::initializer_list<int> sig_numbers) {
+inline future<int> wait_signal(io_t &io, std::initializer_list<int> sig_numbers) {
     auto sigset = std::make_shared<asio::signal_set>(io.context());
     for (auto signum : sig_numbers) {
         sigset->add(signum);
@@ -230,7 +230,7 @@ future<int> wait_signal(io_t &io, std::initializer_list<int> sig_numbers) {
     return fut;
 }
 
-asio::error_code get_io_error_code(const std::exception_ptr& eptr) {
+inline asio::error_code get_io_error_code(const std::exception_ptr& eptr) {
     try {
         std::rethrow_exception(eptr);
     } catch (const asio::error_code &ec){
