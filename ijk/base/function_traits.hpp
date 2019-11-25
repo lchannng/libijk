@@ -4,155 +4,94 @@
  * Date  : 2019/08/01 13:34:46
  */
 
-#ifndef RCLCPP__FUNCTION_TRAITS_HPP_
-#define RCLCPP__FUNCTION_TRAITS_HPP_
+#pragma once
+#ifndef FUNCTION_TRAITS_HPP_ZAGEWMY0
+#define FUNCTION_TRAITS_HPP_ZAGEWMY0
 
 #include <functional>
-#include <memory>
 #include <tuple>
 
-namespace ijk
-{
+namespace ijk {
 
-/* NOTE(esteve):
- * We support service callbacks that can optionally take the request id,
- * which should be possible with two overloaded create_service methods,
- * but unfortunately std::function's constructor on VS2015 is too greedy,
- * so we need a mechanism for checking the arity and the type of each argument
- * in a callback function.
- * See http://blogs.msdn.com/b/vcblog/archive/2015/06/19/c-11-14-17-features-in-vs-2015-rtm.aspx
- */
+// https://github.com/qicosmos/cosmos/blob/master/function_traits.hpp
 
-// Remove the first item in a tuple
-template<typename T>
-struct tuple_tail;
+//普通函数.
+//函数指针.
+// function/lambda.
+//成员函数.
+//函数对象.
 
-template<typename Head, typename ... Tail>
-struct tuple_tail<std::tuple<Head, Tail ...>>
-{
-  using type = std::tuple<Tail ...>;
+//转换为std::function和函数指针.
+template <typename T>
+struct function_traits;
+
+//普通函数.
+template <typename Ret, typename... Args>
+struct function_traits<Ret(Args...)> {
+public:
+    enum { arity = sizeof...(Args) };
+    typedef Ret function_type(Args...);
+    typedef Ret return_type;
+    using stl_function_type = std::function<function_type>;
+    typedef Ret (*pointer)(Args...);
+
+    template <size_t I>
+    struct args {
+        static_assert(
+            I < arity,
+            "index is out of range, index must less than sizeof Args");
+        using type = typename std::tuple_element<I, std::tuple<Args...>>::type;
+    };
+
+    typedef std::tuple<std::remove_cv_t<std::remove_reference_t<Args>>...>
+        tuple_type;
+    typedef std::tuple<std::remove_const_t<std::remove_reference_t<Args>>...>
+        bare_tuple_type;
 };
 
-// std::function
-template<typename FunctionT>
-struct function_traits
-{
-  using arguments = typename tuple_tail<
-    typename function_traits<decltype( &FunctionT::operator())>::arguments>::type;
+//函数指针.
+template <typename Ret, typename... Args>
+struct function_traits<Ret (*)(Args...)> : function_traits<Ret(Args...)> {};
 
-  static constexpr std::size_t arity = std::tuple_size<arguments>::value;
+// std::function.
+template <typename Ret, typename... Args>
+struct function_traits<std::function<Ret(Args...)>>
+    : function_traits<Ret(Args...)> {};
 
-  template<std::size_t N>
-  using argument_type = typename std::tuple_element<N, arguments>::type;
+// member function.
+#define FUNCTION_TRAITS(...)                                               \
+    template <typename ReturnType, typename ClassType, typename... Args>   \
+    struct function_traits<ReturnType (ClassType::*)(Args...) __VA_ARGS__> \
+        : function_traits<ReturnType(Args...)> {};
 
-  using return_type = typename function_traits<decltype( &FunctionT::operator())>::return_type;
-};
+FUNCTION_TRAITS()
+FUNCTION_TRAITS(const)
+FUNCTION_TRAITS(volatile)
+FUNCTION_TRAITS(const volatile)
 
-// Free functions
-template<typename ReturnTypeT, typename ... Args>
-struct function_traits<ReturnTypeT(Args ...)>
-{
-  using arguments = std::tuple<Args ...>;
+//函数对象.
+template <typename Callable>
+struct function_traits : function_traits<decltype(&Callable::operator())> {};
 
-  static constexpr std::size_t arity = std::tuple_size<arguments>::value;
+template <typename Function>
+typename function_traits<Function>::stl_function_type to_function(
+    const Function &lambda) {
+    return static_cast<typename function_traits<Function>::stl_function_type>(
+        lambda);
+}
 
-  template<std::size_t N>
-  using argument_type = typename std::tuple_element<N, arguments>::type;
+template <typename Function>
+typename function_traits<Function>::stl_function_type to_function(
+    Function &&lambda) {
+    return static_cast<typename function_traits<Function>::stl_function_type>(
+        std::forward<Function>(lambda));
+}
 
-  using return_type = ReturnTypeT;
-};
+template <typename Function>
+typename function_traits<Function>::pointer to_function_pointer(
+    const Function &lambda) {
+    return static_cast<typename function_traits<Function>::pointer>(lambda);
+}
 
-// Function pointers
-template<typename ReturnTypeT, typename ... Args>
-struct function_traits<ReturnTypeT (*)(Args ...)>: function_traits<ReturnTypeT(Args ...)>
-{};
-
-// std::bind for object methods
-template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...), FArgs ...>>
-#elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
-struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(FArgs ...))(Args ...)>>
-#elif defined __GLIBCXX__  // glibc++ (GNU C++)
-struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...)>(FArgs ...)>>
-#elif defined _MSC_VER  // MS Visual Studio
-struct function_traits<
-  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...), FArgs ...>
->
-#else
-#error "Unsupported C++ compiler / standard library"
-#endif
-  : function_traits<ReturnTypeT(Args ...)>
-{};
-
-// std::bind for object const methods
-template<typename ClassT, typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__bind<ReturnTypeT (ClassT::*)(Args ...) const, FArgs ...>>
-#elif defined _GLIBCXX_RELEASE  // glibc++ (GNU C++ >= 7.1)
-struct function_traits<std::_Bind<ReturnTypeT(ClassT::*(FArgs ...))(Args ...) const>>
-#elif defined __GLIBCXX__  // glibc++ (GNU C++)
-struct function_traits<std::_Bind<std::_Mem_fn<ReturnTypeT (ClassT::*)(Args ...) const>(FArgs ...)>>
-#elif defined _MSC_VER  // MS Visual Studio
-struct function_traits<
-  std::_Binder<std::_Unforced, ReturnTypeT(__cdecl ClassT::*)(Args ...) const, FArgs ...>
->
-#else
-#error "Unsupported C++ compiler / standard library"
-#endif
-  : function_traits<ReturnTypeT(Args ...)>
-{};
-
-// std::bind for free functions
-template<typename ReturnTypeT, typename ... Args, typename ... FArgs>
-#if defined _LIBCPP_VERSION  // libc++ (Clang)
-struct function_traits<std::__bind<ReturnTypeT( &)(Args ...), FArgs ...>>
-#elif defined __GLIBCXX__  // glibc++ (GNU C++)
-struct function_traits<std::_Bind<ReturnTypeT(*(FArgs ...))(Args ...)>>
-#elif defined _MSC_VER  // MS Visual Studio
-struct function_traits<std::_Binder<std::_Unforced, ReturnTypeT(__cdecl &)(Args ...), FArgs ...>>
-#else
-#error "Unsupported C++ compiler / standard library"
-#endif
-  : function_traits<ReturnTypeT(Args ...)>
-{};
-
-// Lambdas
-template<typename ClassT, typename ReturnTypeT, typename ... Args>
-struct function_traits<ReturnTypeT (ClassT::*)(Args ...) const>
-  : function_traits<ReturnTypeT(ClassT &, Args ...)>
-{};
-
-template<typename FunctionT>
-struct function_traits<FunctionT &>: function_traits<FunctionT>
-{};
-
-template<typename FunctionT>
-struct function_traits<FunctionT &&>: function_traits<FunctionT>
-{};
-
-/* NOTE(esteve):
- * VS2015 does not support expression SFINAE, so we're using this template to evaluate
- * the arity of a function.
- */
-template<std::size_t Arity, typename FunctorT>
-struct arity_comparator : std::integral_constant<
-    bool, (Arity == function_traits<FunctorT>::arity)> {};
-
-template<typename FunctorT, typename ... Args>
-struct check_arguments : std::is_same<
-    typename function_traits<FunctorT>::arguments,
-    std::tuple<Args ...>
->
-{};
-
-template<typename FunctorAT, typename FunctorBT>
-struct same_arguments : std::is_same<
-    typename function_traits<FunctorAT>::arguments,
-    typename function_traits<FunctorBT>::arguments
->
-{};
-
-}  // namespace function_traits
-
-#endif  // RCLCPP__FUNCTION_TRAITS_HPP_
+}
+#endif /* end of include guard: FUNCTION_TRAITS_HPP_ZAGEWMY0 */
