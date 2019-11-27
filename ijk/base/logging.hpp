@@ -50,7 +50,7 @@ private:
 
 #define IJK_LOG_MESSAGE_IF(boolean_expression, level, ...) \
     if (boolean_expression)                                \
-    SPDLOG_LOGGER_CALL(ijk::Log::instance().logger(), level, __VA_ARGS__)
+    SPDLOG_LOGGER_CALL(ijk::Logging::instance().logger(), level, __VA_ARGS__)
 
 #define LOG_DEBUG(...) IJK_LOG_MESSAGE(spdlog::level::debug, __VA_ARGS__)
 
