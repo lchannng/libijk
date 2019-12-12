@@ -26,31 +26,27 @@ public:
         return log;
     }
 
-    spdlog::logger *logger() { return _default_logger.get(); }
-
     void initialize() {
         spdlog::init_thread_pool(10240, 1);
-        _default_logger =
-            spdlog::create_async<spdlog::sinks::stdout_color_sink_mt>("main");
+        auto logger =
+            spdlog::create_async<spdlog::sinks::stdout_color_sink_mt>("root");
+        spdlog::set_default_logger(std::move(logger));
     }
 
 private:
     Logging() = default;
     Logging(const Logging &) = delete;
     Logging &operator=(const Logging &) = delete;
-
-private:
-    std::shared_ptr<spdlog::logger> _default_logger;
 };
 
 #define IJK_INITIALIZE_LOGGING() ijk::Logging::instance().initialize()
 
 #define IJK_LOG_MESSAGE(level, ...) \
-    SPDLOG_LOGGER_CALL(ijk::Logging::instance().logger(), level, __VA_ARGS__)
+    SPDLOG_LOGGER_CALL(spdlog::default_logger_raw(), level, __VA_ARGS__)
 
 #define IJK_LOG_MESSAGE_IF(boolean_expression, level, ...) \
     if (boolean_expression)                                \
-    SPDLOG_LOGGER_CALL(ijk::Logging::instance().logger(), level, __VA_ARGS__)
+    SPDLOG_LOGGER_CALL(spdlog::default_logger_raw(), level, __VA_ARGS__)
 
 #define LOG_DEBUG(...) IJK_LOG_MESSAGE(spdlog::level::debug, __VA_ARGS__)
 
