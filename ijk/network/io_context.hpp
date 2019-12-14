@@ -48,6 +48,11 @@ public:
         return context_.poll();
     }
 
+    inline std::size_t poll_one() {
+        try_init();
+        return context_.poll_one();
+    }
+
     template <typename T>
     inline void dispatch(T &&func) {
         asio::dispatch(context_, std::forward<T>(func));
