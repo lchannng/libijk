@@ -31,14 +31,20 @@ public:
     }
 
     inline void run() {
-        std::call_once(once_,
-                       [this]() { owner_ = std::this_thread::get_id(); });
+        try_init();
         context_.run();
     }
 
-    inline size_t poll() {
-        std::call_once(once_,
-                       [this]() { owner_ = std::this_thread::get_id(); });
+    template <typename Rep, typename Period>
+    std::size_t run_for(
+        const std::chrono::duration<Rep, Period>& rel_time)
+    {
+        try_init();
+        return context_.run_for(rel_time);
+    }
+
+    inline std::size_t poll() {
+        try_init();
         return context_.poll();
     }
 
@@ -55,6 +61,12 @@ public:
     template <typename T>
     inline void push(T &&func) {
         asio::post(context_, std::forward<T>(func));
+    }
+
+private:
+    inline void try_init() {
+        std::call_once(once_,
+                       [this]() { owner_ = std::this_thread::get_id(); });
     }
 
 private:
