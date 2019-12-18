@@ -22,7 +22,7 @@
 #include "base/mpmc_queue.h"
 #include "base/noncopyable.h"
 #include "base/optparse.h"
-#include "base/os.h"
+#include "base/os.hpp"
 #include "base/random.h"
 #include "base/ringbuffer.h"
 #include "base/scope_guard.h"

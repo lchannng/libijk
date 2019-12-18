@@ -11,6 +11,10 @@
 #include <filesystem>
 #include <string>
 
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#endif
+
 namespace fs = std::filesystem;
 
 namespace ijk {
