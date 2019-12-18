@@ -8,7 +8,7 @@
 #include "ijk/base/ignore_unused.hpp"
 #include "ijk/base/logging.hpp"
 #include "ijk/network/io.hpp"
-#include "ijk/network/tcp_connection.hpp"
+#include "ijk/network/stream_connection.hpp"
 
 using namespace ijk;
 
@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     ijk::io_t io;
     asio::ip::tcp::endpoint ep(asio::ip::address_v4::loopback(), 4000);
 
-    ijk::dial<tcp_connection>(io, ep)
+    ijk::dial<stream_connection>(io, ep)
         .then([](auto conn) {
             conn->on_message([](auto &c, auto &data) {
                 c->shutdown();

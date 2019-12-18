@@ -1,5 +1,5 @@
 /*
- * File  : tcp_session.h
+ * File  : stream_connection.h
  * Author: Lch <l.channng@gmail.com>
  * Date  : 2019/07/09 19:23:21
  */
@@ -21,9 +21,19 @@
 
 namespace ijk {
 
-class tcp_connection final : public base_connection<tcp_connection> {
+class stream_connection final : public base_connection<stream_connection> {
 public:
+    using message_callback =
+        std::function<size_t(const ptr &, const std::string_view &)>;
+
     using base_connection::base_connection;
+
+    stream_connection &on_message(message_callback &&cb) {
+        // Expects(io_.running_in_this_thread());
+        message_cb_ = std::forward<message_callback>(cb);
+        return *this;
+    }
+
 
     void run() {
         if (io().running_in_this_thread()) {
@@ -55,7 +65,14 @@ private:
             });
     }
 
+    inline size_t invoke_message_cb(const ptr &self,
+                                    const std::string_view &buf) {
+        if (message_cb_) return message_cb_(self, buf);
+        return buf.size();
+    }
+
     buffer recv_buf_;
+    message_callback message_cb_;
 };
 
 }  // namespace ijk

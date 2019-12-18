@@ -52,8 +52,6 @@ class base_connection : public std::enable_shared_from_this<Derived>,
 public:
     using ptr = std::shared_ptr<Derived>;
     using weak_ptr = std::weak_ptr<Derived>;
-    using message_callback =
-        std::function<size_t(const ptr &, const std::string_view &)>;
     using close_callback =
         std::function<void(const ptr &, const asio::error_code &)>;
 
@@ -138,12 +136,6 @@ public:
         });
     }
 
-    Derived &on_message(message_callback &&cb) {
-        // Expects(io_.running_in_this_thread());
-        message_cb_ = std::forward<message_callback>(cb);
-        return *static_cast<Derived *>(this);
-    }
-
     Derived &on_close(close_callback &&cb) {
         // Expects(io_.running_in_this_thread());
         close_cb_list_.emplace_back(std::forward<close_callback>(cb));
@@ -163,18 +155,11 @@ protected:
             }
             close_cb_list_.clear();
         }
-        message_cb_ = nullptr;
         if (socket_.is_open()) {
             asio::error_code ignored_ec;
             socket_.shutdown(asio::socket_base::shutdown_both, ignored_ec);
             socket_.close(ignored_ec);
         }
-    }
-
-    inline size_t invoke_message_cb(const ptr &self,
-                                    const std::string_view &buf) {
-        if (message_cb_) return message_cb_(self, buf);
-        return buf.size();
     }
 
 private:
@@ -244,7 +229,6 @@ private:
     std::list<std::string> pending_outgoing_messages_;
     std::list<std::string> sending_queue_;
     std::vector<asio::const_buffer> sending_buffers_;
-    message_callback message_cb_;
     std::list<close_callback> close_cb_list_;
     bool closing_;
     bool closed_;

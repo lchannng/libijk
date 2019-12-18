@@ -7,7 +7,7 @@
 #include "ijk/base/ignore_unused.hpp"
 #include "ijk/base/logging.hpp"
 #include "ijk/network/io.hpp"
-#include "ijk/network/tcp_connection.hpp"
+#include "ijk/network/stream_connection.hpp"
 
 #include <map>
 #include <shared_mutex>
@@ -15,7 +15,7 @@
 using namespace ijk;
 
 std::shared_mutex conn_mtx;
-std::map<uint64_t, tcp_connection::ptr> conns;
+std::map<uint64_t, stream_connection::ptr> conns;
 
 void broadcast(const std::string_view& data) {
     std::shared_lock<std::shared_mutex> l(conn_mtx);
@@ -24,18 +24,18 @@ void broadcast(const std::string_view& data) {
     }
 }
 
-void add_connection(const tcp_connection::ptr& conn) {
+void add_connection(const stream_connection::ptr& conn) {
     std::unique_lock<std::shared_mutex> l(conn_mtx);
     auto res = conns.emplace(conn->id(), conn);
     Ensures(res.second);
 }
 
-void remove_connection(const tcp_connection::ptr& conn) {
+void remove_connection(const stream_connection::ptr& conn) {
     std::unique_lock<std::shared_mutex> l(conn_mtx);
     conns.erase(conn->id());
 }
 
-void handle_connection(const tcp_connection::ptr &conn) {
+void handle_connection(const stream_connection::ptr &conn) {
     conn->on_message([](auto &, auto &data) {
             broadcast(data);
             return data.size();
@@ -47,8 +47,8 @@ void handle_connection(const tcp_connection::ptr &conn) {
 
 void acceptor_loop(asio::ip::tcp::acceptor &acceptor, io_context_pool &pool) {
     auto &io = pool.get();
-    ijk::accept<tcp_connection>(acceptor, io)
-        .then([](tcp_connection::ptr conn) { handle_connection(conn); })
+    ijk::accept<stream_connection>(acceptor, io)
+        .then([](stream_connection::ptr conn) { handle_connection(conn); })
         .finally([&acceptor, &pool](auto e) {
             if (e.has_value()) {
                 acceptor_loop(acceptor, pool);

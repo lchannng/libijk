@@ -7,11 +7,11 @@
 #include "ijk/base/ignore_unused.hpp"
 #include "ijk/base/logging.hpp"
 #include "ijk/network/io.hpp"
-#include "ijk/network/tcp_connection.hpp"
+#include "ijk/network/stream_connection.hpp"
 
 using namespace ijk;
 
-void handle_connection(const tcp_connection::ptr &conn) {
+void handle_connection(const stream_connection::ptr &conn) {
     conn->on_message([](auto &s, auto &data) {
             s->send(data);
             // s->shutdown();
@@ -22,8 +22,8 @@ void handle_connection(const tcp_connection::ptr &conn) {
 
 void acceptor_loop(asio::ip::tcp::acceptor &acceptor, io_context_pool &pool) {
     auto &io = pool.get();
-    ijk::accept<tcp_connection>(acceptor, io)
-        .then([](tcp_connection::ptr conn) { handle_connection(conn); })
+    ijk::accept<stream_connection>(acceptor, io)
+        .then([](stream_connection::ptr conn) { handle_connection(conn); })
         .finally([&acceptor, &pool](auto e) {
             if (e.has_value()) {
                 acceptor_loop(acceptor, pool);

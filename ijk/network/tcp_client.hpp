@@ -9,7 +9,7 @@
 #define TCP_CLIENT_HPP_B8QMLVHX
 
 #include "io_context.hpp"
-#include "tcp_connection.hpp"
+#include "stream_connection.hpp"
 
 #include "ijk/base/cancel_token.h"
 #include "ijk/base/logging.hpp"
@@ -124,7 +124,7 @@ private:
     void do_connect() {
         status_ = connecting;
         token_ = makeCancelToken();
-        session_ = tcp_connection::create(io_);
+        session_ = stream_connection::create(io_);
         session_->socket().async_connect(
             opts_.endpoint, [this, wt = WeakCancelToken(token_)](auto &ec) {
                 if (wt.expired()) return;
@@ -212,7 +212,7 @@ private:
     };
 
     io_t &io_;
-    tcp_connection::ptr session_;
+    stream_connection::ptr session_;
     SharedCancelToken token_;
     asio::steady_timer timer_;
     options opts_;
