@@ -28,7 +28,11 @@ inline void chdir(std::string_view path) {
     fs::current_path(path);
 }
 
-inline fs::path executable_path_name() {
+inline void mkdirs(const fs::path &path, std::error_code& ec) {
+    fs::create_directories(path, ec);
+}
+
+inline fs::path executable_path() {
 #if defined(_WIN32) || defined(_WIN64)
     char temp[MAX_PATH];
     auto len = GetModuleFileName(NULL, temp, MAX_PATH);
@@ -40,17 +44,12 @@ inline fs::path executable_path_name() {
 }
 
 inline std::string executable_full_name() {
-    auto p = executable_path_name().filename();
+    auto p = executable_path().filename();
     return p.string();
 }
 
 inline std::string executable_name() {
-    auto p = executable_path_name().stem();
-    return p.string();
-}
-
-inline std::string executable_path() {
-    auto p = executable_path_name().parent_path();
+    auto p = executable_path().stem();
     return p.string();
 }
 
