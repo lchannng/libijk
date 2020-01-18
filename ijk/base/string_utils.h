@@ -83,7 +83,7 @@ public:
         va_list ap;
         va_start(ap, fmt);
         // win32
-#if TARGET_PLATFORM == PLATFORM_WINDOWS
+#if defined(_WIN32) || defined(_WIN64)
         int n = vsnprintf_s(fmtbuf, MAX_FMT_LEN, fmt, ap);
 #else
         int n = vsnprintf(fmtbuf, MAX_FMT_LEN, fmt, ap);
