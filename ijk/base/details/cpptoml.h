@@ -1440,14 +1440,9 @@ class table : public base
     template <class T>
     option<T> get_as(const std::string& key) const
     {
-        try
-        {
+        if (contains(key))
             return get_impl<T>(get(key));
-        }
-        catch (const std::out_of_range&)
-        {
-            return {};
-        }
+        return {};
     }
 
     /**
