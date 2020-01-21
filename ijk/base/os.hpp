@@ -13,6 +13,9 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
+#include <unistd.h>
 #else
 #include <unistd.h>
 #endif
@@ -38,6 +41,15 @@ inline fs::path executable_path() {
 #if defined(_WIN32) || defined(_WIN64)
     char temp[MAX_PATH];
     auto len = GetModuleFileName(NULL, temp, MAX_PATH);
+#elif defined(__APPLE__)
+    char temp[PATH_MAX];
+    uint32_t len = sizeof(temp);
+    if (_NSGetExecutablePath(temp, &len) != 0) {
+        temp[0] = '\0';
+        len = 0;
+    } else {
+        len = strlen(temp);
+    }
 #else
     char temp[1024];
     auto len = readlink("/proc/self/exe", temp, 1024);
@@ -51,8 +63,10 @@ inline std::string executable_full_name() {
 }
 
 inline std::string executable_name() {
-    auto p = executable_path().stem();
-    return p.string();
+    auto p = executable_path();
+    auto f = p.filename();
+    if (p.extension().empty()) return p.filename();
+    return p.stem();
 }
 
 }  // namespace os
