@@ -90,11 +90,11 @@ private:
     static constexpr int64_t kMachineShift{kSequenceBits};
     static constexpr int64_t kTimeShift{kMachineBits + kSequenceBits};
 
-    static constexpr int64_t kSequenceMask{-1 ^ (-1 << kSequenceBits)};
-    static constexpr int64_t kMachineMask{-1 ^ (-1 << kMachineBits)};
-    static constexpr int64_t kTimeMask{(-1LL ^ (-1LL << kTimeBits))};
+    static constexpr int64_t kSequenceMask{(1 << kSequenceBits) - 1};
+    static constexpr int64_t kMachineMask{(1 << kMachineBits) - 1};
+    static constexpr int64_t kTimeMask{(1 << kTimeBits) - 1};
 
-    static constexpr int kMaxMachineId{-1 ^ (-1 << kMachineBits)};
+    static constexpr int kMaxMachineId{(1 << kMachineBits) - 1};
 
     int64_t last_timestamp_{0};
     int64_t machine_id_{0};
