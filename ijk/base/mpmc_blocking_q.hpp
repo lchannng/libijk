@@ -71,7 +71,7 @@ public:
 
     /// Try to retrieve, if no items, wait till an item is available and try
     /// again
-    void wait_and_pop(T &popped_item) {
+    bool wait_and_pop(T &popped_item) {
         std::unique_lock<std::mutex> lock(m_);
         while (queue_.empty() && !shutdown_) {
             data_cond_.wait(lock);
@@ -80,10 +80,11 @@ public:
         }
 
         if (queue_.empty() || shutdown_)
-            return;
+            return false;
 
         popped_item = std::move(queue_.front());
         queue_.pop_front();
+        return true;
     }
 
     bool empty() const {
