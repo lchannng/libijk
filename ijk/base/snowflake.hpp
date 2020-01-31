@@ -14,10 +14,31 @@
 
 namespace ijk {
 
-// Id = time((63- m -n) bits)+ machine(m bits) + sequence(n bits)
-template<int MachineBits = 10, int SequenceBits = 12>
+// id = time((63- m -n) bits)+ machine(m bits) + sequence(n bits)
+struct default_snowflake_traits {
+    constexpr static int64_t start_time = 1577808000000;
+    constexpr static int64_t machine_bits = 10;
+    constexpr static int64_t sequence_bits = 12;
+    static int64_t now() {
+        using namespace std::chrono;
+        auto duration = system_clock::now().time_since_epoch();
+        auto ms = duration_cast<milliseconds>(duration).count();
+        return ms;
+    }
+};
+
+struct snowflake_id_info
+{
+    int64_t create_time;
+    int64_t machine_id;
+    int64_t squence;
+};
+
+template<typename T = default_snowflake_traits>
 class snowflake {
 public:
+    using traits_type = T;
+
     snowflake() = default;
 
     ~snowflake() = default;
@@ -34,7 +55,7 @@ public:
     }
 
     int64_t next_id() {
-        int64_t now = now_ms();
+        int64_t now = traits_type::now();
 
         if (now < last_timestamp_) {
             // clock is moving backwards
@@ -46,45 +67,40 @@ public:
         if (last_timestamp_ == now) {
             sequence_ = (sequence_ + 1) & kSequenceMask;
             if (0 == sequence_) {
-                now = til_next_millis(now);
+                now = til_next_time(now);
             }
         } else {
             sequence_ = 0;
         }
         last_timestamp_ = now;
-        return ((now - kEpoch) << kTimeShift) | (machine_id_ << kMachineShift) |
+        return ((now - traits_type::start_time) << kTimeShift) | (machine_id_ << kMachineShift) |
                sequence_;
     }
 
-    static void get_info(int64_t id, int64_t *create_time, int *machine_id,
-                        int *seq) {
-        if (create_time)
-            *create_time = ((id >> kTimeShift) & kTimeMask) + kEpoch;
-        if (machine_id) *machine_id = (id >> kMachineShift) & kMachineMask;
-        if (seq) *seq = id & kSequenceMask;
+    inline static void get_info(int64_t id, snowflake_id_info &info) {
+        info.create_time = ((id >> kTimeShift) & kTimeMask) + traits_type::start_time;
+        info.machine_id = (id >> kMachineShift) & kMachineMask;
+        info.squence = id & kSequenceMask;
+    }
+
+    inline static snowflake_id_info get_info(int64_t id) {
+        snowflake_id_info info;
+        get_info(id, info);
+        return info;
     }
 
 private:
-    int64_t now_ms() {
-        using namespace std::chrono;
-        auto duration = system_clock::now().time_since_epoch();
-        auto ms = duration_cast<milliseconds>(duration).count();
-        return ms;
-    }
-
-    int64_t til_next_millis(int64_t now) {
+    int64_t til_next_time(int64_t now) {
         int64_t t;
         do {
-            t = now_ms();
+            t = traits_type::now();
         } while (t <= now);
         return t;
     }
 
 private:
-    static constexpr int64_t kEpoch{1576497960000};
-
-    static constexpr int64_t kMachineBits{MachineBits};
-    static constexpr int64_t kSequenceBits{SequenceBits};
+    static constexpr int64_t kMachineBits{traits_type::machine_bits};
+    static constexpr int64_t kSequenceBits{traits_type::sequence_bits};
     static constexpr int64_t kTimeBits{63 - kMachineBits - kSequenceBits};
 
     static constexpr int64_t kMachineShift{kSequenceBits};
@@ -92,7 +108,7 @@ private:
 
     static constexpr int64_t kSequenceMask{(1 << kSequenceBits) - 1};
     static constexpr int64_t kMachineMask{(1 << kMachineBits) - 1};
-    static constexpr int64_t kTimeMask{(1 << kTimeBits) - 1};
+    static constexpr int64_t kTimeMask{(1LL << kTimeBits) - 1};
 
     static constexpr int kMaxMachineId{(1 << kMachineBits) - 1};
 

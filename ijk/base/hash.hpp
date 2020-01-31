@@ -130,6 +130,22 @@ inline uint64_t chash_string(const std::string &s, uint64_t seed = 0) {
 inline constexpr uint64_t operator""_csh(const char *string, size_t len) {
     return chash_string(string, len);
 }
+
+inline uint64_t bkrd_hash(const void *data, size_t len) {
+    uint32_t seed = 131;  //  31 131 1313 13131 131313 etc..
+    uint64_t hash = 0;
+    uint8_t *start = (uint8_t *)data;
+    uint8_t *end = (uint8_t *)data + len;
+    for (; start != end; ++start) {
+        hash = hash * seed + (*start);
+    }
+    return hash;
+}
+
+inline uint64_t bkrd_hash(std::string_view data) {
+    return bkrd_hash(data.data(), data.size());
+}
+
 }  // namespace ijk
 
 #endif /* end of include guard: HASH_HPP_0LRTT3VH */
