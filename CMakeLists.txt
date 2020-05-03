@@ -110,6 +110,7 @@ auto_install_files(ijk "${IJK_SRC_ROOT}" ${IJK_HDRS})
 auto_source_group(ijk ${IJK_SRC_ROOT} ${IJK_HDRS} ${IJK_SRC_ROOT}/src.cc)
 add_library(ijk_ STATIC ${IJK_HDRS} ${IJK_SRC_ROOT}/src.cc)
 target_link_libraries(ijk_ ${DEP_LIBS})
+target_include_directories(ijk_ PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 
 #

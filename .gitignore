@@ -7,3 +7,4 @@ Win32
 deps
 .idea
 cmake-build*
+.vscode
